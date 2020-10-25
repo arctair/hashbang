@@ -8,9 +8,25 @@ import (
 	"testing"
 )
 
+type stubPostRepository struct{}
+
+func (r *stubPostRepository) FindAll() []Post {
+	return []Post{
+		{
+			ImageUri: "https://images.unsplash.com/photo-1603316851229-26637b4bd1b8?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1400&q=80",
+			Tags: []string{
+				"#windy",
+				"#tdd",
+			},
+		},
+	}
+}
+
 func TestPostController(t *testing.T) {
 	t.Run("GET returns posts", func(t *testing.T) {
-		postController := NewPostController()
+		postController := NewPostController(
+			&stubPostRepository{},
+		)
 
 		request, _ := http.NewRequest(http.MethodGet, "/", nil)
 		response := httptest.NewRecorder()
