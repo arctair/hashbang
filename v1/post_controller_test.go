@@ -10,7 +10,8 @@ import (
 )
 
 type stubPostRepository struct {
-	created Post
+	created    Post
+	deletedAll bool
 }
 
 func (r *stubPostRepository) FindAll() []Post {
@@ -27,6 +28,10 @@ func (r *stubPostRepository) FindAll() []Post {
 
 func (r *stubPostRepository) Create(post Post) {
 	r.created = post
+}
+
+func (r *stubPostRepository) DeleteAll() {
+	r.deletedAll = true
 }
 
 func TestPostController(t *testing.T) {
@@ -46,12 +51,12 @@ func TestPostController(t *testing.T) {
 			t.Errorf("got status code %d want %d", gotStatusCode, wantStatusCode)
 		}
 
-		var gotBody []Post
-		if err := json.NewDecoder(response.Body).Decode(&gotBody); err != nil {
+		var gotPosts []Post
+		if err := json.NewDecoder(response.Body).Decode(&gotPosts); err != nil {
 			t.Fatal(err)
 		}
 
-		wantBody := []Post{
+		wantPosts := []Post{
 			{
 				ImageUri: "https://images.unsplash.com/photo-1603316851229-26637b4bd1b8?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1400&q=80",
 				Tags: []string{
@@ -61,8 +66,8 @@ func TestPostController(t *testing.T) {
 			},
 		}
 
-		if !reflect.DeepEqual(gotBody, wantBody) {
-			t.Errorf("got body %q want %q", gotBody, wantBody)
+		if !reflect.DeepEqual(gotPosts, wantPosts) {
+			t.Errorf("got posts %q want %q", gotPosts, wantPosts)
 		}
 	})
 
@@ -106,6 +111,30 @@ func TestPostController(t *testing.T) {
 
 		if !reflect.DeepEqual(gotCreated, wantCreated) {
 			t.Errorf("got created %q want %q", gotCreated, wantCreated)
+		}
+	})
+
+	t.Run("DELETE deletes posts", func(t *testing.T) {
+		repository := &stubPostRepository{}
+		postController := NewPostController(
+			repository,
+		)
+
+		request, _ := http.NewRequest(http.MethodDelete, "/posts?id=8c907ab9-fef8-43ab-9103-b19aabfb40b2", nil)
+		response := httptest.NewRecorder()
+		postController.DeletePost().ServeHTTP(response, request)
+
+		gotStatusCode := response.Result().StatusCode
+		wantStatusCode := 204
+
+		if gotStatusCode != wantStatusCode {
+			t.Errorf("got status code %d want %d", gotStatusCode, wantStatusCode)
+		}
+
+		gotDeletedAll := repository.deletedAll
+
+		if !gotDeletedAll {
+			t.Errorf("got deleted all false wanted true")
 		}
 	})
 }

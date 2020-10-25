@@ -25,6 +25,14 @@ func (c *stubPostController) CreatePost() http.Handler {
 	)
 }
 
+func (c *stubPostController) DeletePost() http.Handler {
+	return http.HandlerFunc(
+		func(w http.ResponseWriter, r *http.Request) {
+			w.Write([]byte("the post controller body / delete method"))
+		},
+	)
+}
+
 type stubVersionController struct {
 }
 
@@ -99,6 +107,27 @@ func TestRouter(t *testing.T) {
 
 		gotBody := string(response.Body.Bytes())
 		wantBody := "the post controller body / post method"
+
+		if gotBody != wantBody {
+			t.Errorf("got body %s want %s", gotBody, wantBody)
+		}
+	})
+
+	t.Run("Route DELETE /posts to post controller", func(t *testing.T) {
+		request, _ := http.NewRequest(http.MethodDelete, "/posts", nil)
+		response := httptest.NewRecorder()
+
+		router.ServeHTTP(response, request)
+
+		gotStatusCode := response.Result().StatusCode
+		wantStatusCode := 200
+
+		if gotStatusCode != wantStatusCode {
+			t.Errorf("got status code %d want %d", gotStatusCode, wantStatusCode)
+		}
+
+		gotBody := string(response.Body.Bytes())
+		wantBody := "the post controller body / delete method"
 
 		if gotBody != wantBody {
 			t.Errorf("got body %s want %s", gotBody, wantBody)

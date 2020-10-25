@@ -4,6 +4,7 @@ package v1
 type PostRepository interface {
 	FindAll() []Post
 	Create(post Post)
+	DeleteAll()
 }
 
 type postRepository struct {
@@ -16,6 +17,10 @@ func (r *postRepository) FindAll() []Post {
 
 func (r *postRepository) Create(post Post) {
 	r.posts = append(r.posts, post)
+}
+
+func (r *postRepository) DeleteAll() {
+	r.posts = []Post{}
 }
 
 // NewPostRepository ...

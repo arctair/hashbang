@@ -9,6 +9,7 @@ import (
 type PostController interface {
 	GetPosts() http.Handler
 	CreatePost() http.Handler
+	DeletePost() http.Handler
 }
 
 type postController struct {
@@ -46,6 +47,15 @@ func (c *postController) CreatePost() http.Handler {
 			}
 			c.postRepository.Create(post)
 			rw.WriteHeader(201)
+		},
+	)
+}
+
+func (c *postController) DeletePost() http.Handler {
+	return http.HandlerFunc(
+		func(rw http.ResponseWriter, r *http.Request) {
+			c.postRepository.DeleteAll()
+			rw.WriteHeader(204)
 		},
 	)
 }

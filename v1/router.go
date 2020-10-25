@@ -29,6 +29,8 @@ func (router *Router) ServeHTTP(w http.ResponseWriter, request *http.Request) {
 		serveMux.Handle("/version", router.versionController.HandlerFunc())
 	case http.MethodPost:
 		serveMux.Handle("/posts", router.postController.CreatePost())
+	case http.MethodDelete:
+		serveMux.Handle("/posts", router.postController.DeletePost())
 	}
 	serveMux.ServeHTTP(w, request)
 }

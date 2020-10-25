@@ -43,10 +43,10 @@ func getPosts(baseUrl string) ([]Post, error) {
 		return nil, fmt.Errorf("got status code %d want %d", gotStatusCode, wantStatusCode)
 	}
 
-	var gotBody []Post
+	var posts []Post
 	defer response.Body.Close()
-	err = json.NewDecoder(response.Body).Decode(&gotBody)
-	return gotBody, err
+	err = json.NewDecoder(response.Body).Decode(&posts)
+	return posts, err
 }
 
 func createPost(baseUrl string, post Post) error {
@@ -70,6 +70,34 @@ func createPost(baseUrl string, post Post) error {
 
 	gotStatusCode := response.StatusCode
 	wantStatusCode := 201
+
+	if gotStatusCode != wantStatusCode {
+		return fmt.Errorf("got status code %d want %d", gotStatusCode, wantStatusCode)
+	}
+	return nil
+}
+
+func deletePosts(baseUrl string) error {
+	var (
+		err      error
+		request  *http.Request
+		response *http.Response
+	)
+
+	if request, err = http.NewRequest(
+		http.MethodDelete,
+		fmt.Sprintf("%s/posts", baseUrl),
+		nil,
+	); err != nil {
+		return err
+	}
+
+	if response, err = http.DefaultClient.Do(request); err != nil {
+		return err
+	}
+
+	gotStatusCode := response.StatusCode
+	wantStatusCode := 204
 
 	if gotStatusCode != wantStatusCode {
 		return fmt.Errorf("got status code %d want %d", gotStatusCode, wantStatusCode)
@@ -114,7 +142,7 @@ func TestAcceptance(t *testing.T) {
 		}
 
 		// create post
-		if err := createPost(
+		if err = createPost(
 			baseUrl,
 			Post{
 				ImageUri: "https://images.unsplash.com/photo-1603316851229-26637b4bd1b8?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1400&q=80",
@@ -140,6 +168,19 @@ func TestAcceptance(t *testing.T) {
 				},
 			},
 		}
+
+		if !reflect.DeepEqual(gotPosts, wantPosts) {
+			t.Errorf("got posts %+v want %+v", gotPosts, wantPosts)
+		}
+
+		// delete posts
+		err = deletePosts(baseUrl)
+		assertutil.NotError(t, err)
+
+		// get posts is empty
+		gotPosts, err = getPosts(baseUrl)
+		assertutil.NotError(t, err)
+		wantPosts = []Post{}
 
 		if !reflect.DeepEqual(gotPosts, wantPosts) {
 			t.Errorf("got posts %+v want %+v", gotPosts, wantPosts)

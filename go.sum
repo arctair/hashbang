@@ -1,4 +1,6 @@
 github.com/arctair/go-assertutil v1.0.6 h1:ZkQDGWBTBIoBhpUt4cgvxmKuzlaxwC0Mx4JE0RKjqWo=
 github.com/arctair/go-assertutil v1.0.6/go.mod h1:unm0u9KBGHxLcyE7l7+mo/tcy5zOjhgEooyCf4hdwDI=
+github.com/cenkalti/backoff v1.1.0 h1:QnvVp8ikKCDWOsFheytRCoYWYPO/ObCTBGxT19Hc+yE=
+github.com/cenkalti/backoff v2.2.1+incompatible h1:tNowT99t7UNflLxfYYSlKYsBpXdEet03Pg2g16Swow4=
 github.com/cenkalti/backoff/v4 v4.1.0 h1:c8LkOFQTzuO0WBM/ae5HdGQuZPfPxp7lqBRwQRm4fSc=
 github.com/cenkalti/backoff/v4 v4.1.0/go.mod h1:scbssz8iZGpm3xbr14ovlUdkxfGXNInqkPWOWmG2CLw=
