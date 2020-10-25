@@ -1,4 +1,4 @@
-VERSION=$1
+#!/bin/sh
 cat <<EOF | kubectl apply -f -
 apiVersion: apps/v1
 kind: Deployment
@@ -18,7 +18,7 @@ spec:
     spec:
       containers:
       - name: hashbang
-        image: arctair/hashbang:$VERSION
+        image: arctair/hashbang:`scripts/versionByDepth`
         ports:
         - containerPort: 5000
 ---
