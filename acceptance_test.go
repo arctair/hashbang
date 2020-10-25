@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"reflect"
 	"regexp"
 	"testing"
 	"time"
@@ -44,6 +45,42 @@ func TestAcceptance(t *testing.T) {
 			),
 		)
 	}
+
+	t.Run("GET /posts returns tags and url", func(t *testing.T) {
+		response, err := http.Get(fmt.Sprintf("%s/posts", baseUrl))
+		assertutil.NotError(t, err)
+
+		gotStatusCode := response.StatusCode
+		wantStatusCode := 200
+
+		if gotStatusCode != wantStatusCode {
+			t.Errorf("got status code %d want %d", gotStatusCode, wantStatusCode)
+		}
+
+		type Post struct {
+			ImageUri string
+			Tags     []string
+		}
+
+		var gotBody []Post
+		defer response.Body.Close()
+		err = json.NewDecoder(response.Body).Decode(&gotBody)
+		assertutil.NotError(t, err)
+
+		wantBody := []Post{
+			{
+				ImageUri: "https://images.unsplash.com/photo-1603316851229-26637b4bd1b8?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1400&q=80",
+				Tags: []string{
+					"#windy",
+					"#tdd",
+				},
+			},
+		}
+
+		if !reflect.DeepEqual(gotBody, wantBody) {
+			t.Errorf("got body %+v want %+v", gotBody, wantBody)
+		}
+	})
 
 	t.Run("GET /version returns sha1 and version", func(t *testing.T) {
 		response, err := http.Get(fmt.Sprintf("%s/version", baseUrl))

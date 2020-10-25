@@ -6,9 +6,18 @@ import (
 	"testing"
 )
 
-type stubVersionController struct {
+type stubPostController struct {
 }
 
+func (c *stubPostController) HandlerFunc() http.Handler {
+	return http.HandlerFunc(
+		func(w http.ResponseWriter, r *http.Request) {
+			w.Write([]byte("the post controller body"))
+		},
+	)
+}
+
+type stubVersionController struct {
 }
 
 func (c *stubVersionController) HandlerFunc() http.Handler {
@@ -21,6 +30,7 @@ func (c *stubVersionController) HandlerFunc() http.Handler {
 
 func TestRouter(t *testing.T) {
 	router := NewRouter(
+		&stubPostController{},
 		&stubVersionController{},
 	)
 
@@ -45,6 +55,27 @@ func TestRouter(t *testing.T) {
 		}
 	})
 
+	t.Run("Route /posts to post controller", func(t *testing.T) {
+		request, _ := http.NewRequest(http.MethodGet, "/posts", nil)
+		response := httptest.NewRecorder()
+
+		router.ServeHTTP(response, request)
+
+		gotStatusCode := response.Result().StatusCode
+		wantStatusCode := 200
+
+		if gotStatusCode != wantStatusCode {
+			t.Errorf("got status code %d want %d", gotStatusCode, wantStatusCode)
+		}
+
+		gotBody := string(response.Body.Bytes())
+		wantBody := "the post controller body"
+
+		if gotBody != wantBody {
+			t.Errorf("got body %s want %s", gotBody, wantBody)
+		}
+	})
+
 	t.Run("Route /version to version controller", func(t *testing.T) {
 		request, _ := http.NewRequest(http.MethodGet, "/version", nil)
 		response := httptest.NewRecorder()
@@ -59,7 +90,7 @@ func TestRouter(t *testing.T) {
 		}
 
 		gotBody := string(response.Body.Bytes())
-		wantBody := "the body"
+		wantBody := "the version controller body"
 
 		if gotBody != wantBody {
 			t.Errorf("got body %s want %s", gotBody, wantBody)
