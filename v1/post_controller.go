@@ -39,16 +39,13 @@ func (c *postController) GetPosts() http.Handler {
 func (c *postController) CreatePost() http.Handler {
 	return http.HandlerFunc(
 		func(rw http.ResponseWriter, r *http.Request) {
+			defer r.Body.Close()
+			var post Post
+			if err := json.NewDecoder(r.Body).Decode(&post); err != nil {
+				panic(err)
+			}
+			c.postRepository.Create(post)
 			rw.WriteHeader(201)
-			c.postRepository.Create(
-				Post{
-					ImageUri: "https://images.unsplash.com/photo-1603316851229-26637b4bd1b8?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1400&q=80",
-					Tags: []string{
-						"#windy",
-						"#tdd",
-					},
-				},
-			)
 		},
 	)
 }
