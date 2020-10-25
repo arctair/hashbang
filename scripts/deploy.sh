@@ -3,34 +3,34 @@ cat <<EOF | kubectl apply -f -
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: go-starter
+  name: hashbang
   labels:
-    app: go-starter
+    app: hashbang
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: go-starter
+      app: hashbang
   template:
     metadata:
       labels:
-        app: go-starter
+        app: hashbang
     spec:
       containers:
-      - name: go-starter
-        image: arctair/go-starter:$VERSION
+      - name: hashbang
+        image: arctair/hashbang:$VERSION
         ports:
         - containerPort: 5000
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: go-starter
+  name: hashbang
 spec:
   type: NodePort
   ports:
   - port: 8080
     targetPort: 5000
   selector:
-    app: go-starter
+    app: hashbang
 EOF

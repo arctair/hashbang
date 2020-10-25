@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"sync"
 
-	v1 "github.com/arctair/go-starter/v1"
+	v1 "github.com/arctair/hashbang/v1"
 )
 
 var (

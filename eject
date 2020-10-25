@@ -1,6 +1,0 @@
-#!/bin/sh
-name=`echo $PWD | rev | cut -d / -f 1 | rev`
-find . ! -path './.git/*' -type f | xargs sed -i "s/go-starter/$name/g"
-rm eject
-git remote rm origin
-git commit -am "ejected from go-starter"

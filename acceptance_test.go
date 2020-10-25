@@ -26,7 +26,7 @@ func TestAcceptance(t *testing.T) {
 
 		assertutil.NotError(t, exec.Command("sh", "build").Run())
 
-		command := exec.Command("bin/go-starter")
+		command := exec.Command("bin/hashbang")
 		stderr, err := command.StderrPipe()
 		assertutil.NotError(t, err)
 		assertutil.NotError(t, command.Start())

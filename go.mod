@@ -1,4 +1,4 @@
-module github.com/arctair/go-starter
+module github.com/arctair/hashbang
 
 go 1.14
 

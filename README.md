@@ -1,8 +1,8 @@
-# go-starter
+# hashbang
 Template for Golang HTTP APIs
 ## Run the tests
 ```
-$ go test github.com/arctair/go-starter/v1
+$ go test github.com/arctair/hashbang/v1
 $ go test -tags acceptance
 ```
 or
@@ -20,6 +20,6 @@ $ curl localhost:5000
 ```
 ## Build a docker image
 ```
-$ go build -o bin/go-starter
-$ docker build -t arctair/go-starter .
+$ go build -o bin/hashbang
+$ docker build -t arctair/hashbang .
 ```

@@ -7,5 +7,5 @@ else
   version=1.0.`git rev-list --count HEAD $root`
 fi
 go build \
-  -o ${1:-bin/go-starter} \
+  -o ${1:-bin/hashbang} \
   -ldflags "-X main.sha1=$sha1 -X main.version=$version"
