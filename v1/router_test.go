@@ -6,24 +6,22 @@ import (
 	"testing"
 )
 
-type StubVersionController struct {
+type stubVersionController struct {
 }
 
-func NewStubVersionController() VersionController {
-	return &StubVersionController{}
 }
 
-func (c *StubVersionController) HandlerFunc() http.Handler {
+func (c *stubVersionController) HandlerFunc() http.Handler {
 	return http.HandlerFunc(
 		func(w http.ResponseWriter, r *http.Request) {
-			w.Write([]byte("the body"))
+			w.Write([]byte("the version controller body"))
 		},
 	)
 }
 
 func TestRouter(t *testing.T) {
 	router := NewRouter(
-		NewStubVersionController(),
+		&stubVersionController{},
 	)
 
 	t.Run("Route not found", func(t *testing.T) {
