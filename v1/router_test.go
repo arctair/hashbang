@@ -9,7 +9,7 @@ import (
 type stubPostController struct {
 }
 
-func (c *stubPostController) HandlerFunc() http.Handler {
+func (c *stubPostController) GetPosts() http.Handler {
 	return http.HandlerFunc(
 		func(w http.ResponseWriter, r *http.Request) {
 			w.Write([]byte("the post controller body"))
@@ -55,7 +55,7 @@ func TestRouter(t *testing.T) {
 		}
 	})
 
-	t.Run("Route /posts to post controller", func(t *testing.T) {
+	t.Run("Route GET /posts to post controller", func(t *testing.T) {
 		request, _ := http.NewRequest(http.MethodGet, "/posts", nil)
 		response := httptest.NewRecorder()
 

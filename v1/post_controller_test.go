@@ -14,7 +14,7 @@ func TestPostController(t *testing.T) {
 
 		request, _ := http.NewRequest(http.MethodGet, "/", nil)
 		response := httptest.NewRecorder()
-		postController.HandlerFunc().ServeHTTP(response, request)
+		postController.GetPosts().ServeHTTP(response, request)
 
 		gotStatusCode := response.Result().StatusCode
 		wantStatusCode := 200

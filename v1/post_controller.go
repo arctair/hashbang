@@ -7,12 +7,12 @@ import (
 
 // PostController ...
 type PostController interface {
-	HandlerFunc() http.Handler
+	GetPosts() http.Handler
 }
 
 type postController struct{}
 
-func (c *postController) HandlerFunc() http.Handler {
+func (c *postController) GetPosts() http.Handler {
 	return http.HandlerFunc(
 		func(rw http.ResponseWriter, r *http.Request) {
 			bytes, err := json.Marshal(
