@@ -4,6 +4,7 @@ package main_test
 
 import (
 	"bufio"
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -19,6 +20,62 @@ import (
 	assertutil "github.com/arctair/go-assertutil"
 	"github.com/cenkalti/backoff/v4"
 )
+
+type Post struct {
+	ImageUri string
+	Tags     []string
+}
+
+func getPosts(baseUrl string) ([]Post, error) {
+	var (
+		err      error
+		response *http.Response
+	)
+
+	if response, err = http.Get(fmt.Sprintf("%s/posts", baseUrl)); err != nil {
+		return nil, err
+	}
+
+	gotStatusCode := response.StatusCode
+	wantStatusCode := 200
+
+	if gotStatusCode != wantStatusCode {
+		return nil, fmt.Errorf("got status code %d want %d", gotStatusCode, wantStatusCode)
+	}
+
+	var gotBody []Post
+	defer response.Body.Close()
+	err = json.NewDecoder(response.Body).Decode(&gotBody)
+	return gotBody, err
+}
+
+func createPost(baseUrl string, post Post) error {
+	var (
+		err         error
+		requestBody []byte
+		response    *http.Response
+	)
+
+	if requestBody, err = json.Marshal(post); err != nil {
+		return err
+	}
+
+	if response, err = http.Post(
+		fmt.Sprintf("%s/posts", baseUrl),
+		"application/json",
+		bytes.NewBuffer(requestBody),
+	); err != nil {
+		return err
+	}
+
+	gotStatusCode := response.StatusCode
+	wantStatusCode := 201
+
+	if gotStatusCode != wantStatusCode {
+		return fmt.Errorf("got status code %d want %d", gotStatusCode, wantStatusCode)
+	}
+	return nil
+}
 
 func TestAcceptance(t *testing.T) {
 	baseUrl := os.Getenv("BASE_URL")
@@ -46,28 +103,35 @@ func TestAcceptance(t *testing.T) {
 		)
 	}
 
-	t.Run("GET /posts returns tags and url", func(t *testing.T) {
-		response, err := http.Get(fmt.Sprintf("%s/posts", baseUrl))
+	t.Run("create and get posts", func(t *testing.T) {
+		// get posts is empty
+		gotPosts, err := getPosts(baseUrl)
 		assertutil.NotError(t, err)
+		wantPosts := []Post{}
 
-		gotStatusCode := response.StatusCode
-		wantStatusCode := 200
-
-		if gotStatusCode != wantStatusCode {
-			t.Errorf("got status code %d want %d", gotStatusCode, wantStatusCode)
+		if !reflect.DeepEqual(gotPosts, wantPosts) {
+			t.Errorf("got posts %+v want %+v", gotPosts, wantPosts)
 		}
 
-		type Post struct {
-			ImageUri string
-			Tags     []string
+		// create post
+		if err := createPost(
+			baseUrl,
+			Post{
+				ImageUri: "https://images.unsplash.com/photo-1603316851229-26637b4bd1b8?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1400&q=80",
+				Tags: []string{
+					"#windy",
+					"#tdd",
+				},
+			},
+		); err != nil {
+			t.Fatal(err)
 		}
 
-		var gotBody []Post
-		defer response.Body.Close()
-		err = json.NewDecoder(response.Body).Decode(&gotBody)
+		// get posts is not empty
+		gotPosts, err = getPosts(baseUrl)
 		assertutil.NotError(t, err)
 
-		wantBody := []Post{
+		wantPosts = []Post{
 			{
 				ImageUri: "https://images.unsplash.com/photo-1603316851229-26637b4bd1b8?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1400&q=80",
 				Tags: []string{
@@ -77,8 +141,8 @@ func TestAcceptance(t *testing.T) {
 			},
 		}
 
-		if !reflect.DeepEqual(gotBody, wantBody) {
-			t.Errorf("got body %+v want %+v", gotBody, wantBody)
+		if !reflect.DeepEqual(gotPosts, wantPosts) {
+			t.Errorf("got posts %+v want %+v", gotPosts, wantPosts)
 		}
 	})
 

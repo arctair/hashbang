@@ -23,7 +23,12 @@ func NewRouter(
 
 func (router *Router) ServeHTTP(w http.ResponseWriter, request *http.Request) {
 	serveMux := http.NewServeMux()
-	serveMux.Handle("/posts", router.postController.GetPosts())
-	serveMux.Handle("/version", router.versionController.HandlerFunc())
+	switch request.Method {
+	case http.MethodGet:
+		serveMux.Handle("/posts", router.postController.GetPosts())
+		serveMux.Handle("/version", router.versionController.HandlerFunc())
+	case http.MethodPost:
+		serveMux.Handle("/posts", router.postController.CreatePost())
+	}
 	serveMux.ServeHTTP(w, request)
 }

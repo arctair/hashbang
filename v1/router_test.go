@@ -12,7 +12,15 @@ type stubPostController struct {
 func (c *stubPostController) GetPosts() http.Handler {
 	return http.HandlerFunc(
 		func(w http.ResponseWriter, r *http.Request) {
-			w.Write([]byte("the post controller body"))
+			w.Write([]byte("the post controller body / get method"))
+		},
+	)
+}
+
+func (c *stubPostController) CreatePost() http.Handler {
+	return http.HandlerFunc(
+		func(w http.ResponseWriter, r *http.Request) {
+			w.Write([]byte("the post controller body / post method"))
 		},
 	)
 }
@@ -69,7 +77,28 @@ func TestRouter(t *testing.T) {
 		}
 
 		gotBody := string(response.Body.Bytes())
-		wantBody := "the post controller body"
+		wantBody := "the post controller body / get method"
+
+		if gotBody != wantBody {
+			t.Errorf("got body %s want %s", gotBody, wantBody)
+		}
+	})
+
+	t.Run("Route POST /posts to post controller", func(t *testing.T) {
+		request, _ := http.NewRequest(http.MethodPost, "/posts", nil)
+		response := httptest.NewRecorder()
+
+		router.ServeHTTP(response, request)
+
+		gotStatusCode := response.Result().StatusCode
+		wantStatusCode := 200
+
+		if gotStatusCode != wantStatusCode {
+			t.Errorf("got status code %d want %d", gotStatusCode, wantStatusCode)
+		}
+
+		gotBody := string(response.Body.Bytes())
+		wantBody := "the post controller body / post method"
 
 		if gotBody != wantBody {
 			t.Errorf("got body %s want %s", gotBody, wantBody)

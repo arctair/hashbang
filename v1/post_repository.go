@@ -3,24 +3,24 @@ package v1
 // PostRepository ...
 type PostRepository interface {
 	FindAll() []Post
+	Create(post Post)
 }
 
 type postRepository struct {
+	posts []Post
 }
 
 func (r *postRepository) FindAll() []Post {
-	return []Post{
-		{
-			ImageUri: "https://images.unsplash.com/photo-1603316851229-26637b4bd1b8?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1400&q=80",
-			Tags: []string{
-				"#windy",
-				"#tdd",
-			},
-		},
-	}
+	return r.posts
+}
+
+func (r *postRepository) Create(post Post) {
+	r.posts = append(r.posts, post)
 }
 
 // NewPostRepository ...
 func NewPostRepository() PostRepository {
-	return &postRepository{}
+	return &postRepository{
+		posts: []Post{},
+	}
 }
