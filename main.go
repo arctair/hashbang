@@ -1,11 +1,14 @@
 package main
 
 import (
+	"context"
 	"log"
 	"net/http"
+	"os"
 	"sync"
 
 	v1 "github.com/arctair/hashbang/v1"
+	"github.com/jackc/pgx/v4"
 )
 
 var (
@@ -15,11 +18,22 @@ var (
 
 // StartHTTPServer ...
 func StartHTTPServer(wg *sync.WaitGroup) *http.Server {
+	connection, err := pgx.Connect(context.Background(), os.Getenv("DATABASE_URL"))
+	if err != nil {
+		panic(err)
+	}
+
+	if err = v1.Migrate(connection); err != nil {
+		panic(err)
+	}
+
 	server := &http.Server{
 		Addr: ":5000",
 		Handler: v1.NewRouter(
 			v1.NewPostController(
-				v1.NewPostRepository(),
+				v1.NewPostRepository(
+					connection,
+				),
 			),
 			v1.NewVersionController(
 				v1.NewBuild(sha1, version),

@@ -4,6 +4,7 @@ package main_test
 
 import (
 	"bufio"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -16,6 +17,7 @@ import (
 
 	assertutil "github.com/arctair/go-assertutil"
 	"github.com/cenkalti/backoff/v4"
+	"github.com/cockroachdb/cockroach-go/v2/testserver"
 )
 
 func TestAcceptance(t *testing.T) {
@@ -25,7 +27,12 @@ func TestAcceptance(t *testing.T) {
 
 		assertutil.NotError(t, exec.Command("sh", "build").Run())
 
+		testServer, err := testserver.NewTestServer()
+		defer testServer.Stop()
+		assertutil.NotError(t, err)
+
 		command := exec.Command("bin/hashbang")
+		command.Env = append(command.Env, fmt.Sprintf("DATABASE_URL=%s", testServer.PGURL().String()))
 		stderr, err := command.StderrPipe()
 		assertutil.NotError(t, err)
 		assertutil.NotError(t, command.Start())
