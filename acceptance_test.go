@@ -4,9 +4,6 @@ package main_test
 
 import (
 	"bufio"
-	"bytes"
-	"encoding/json"
-	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -20,90 +17,6 @@ import (
 	assertutil "github.com/arctair/go-assertutil"
 	"github.com/cenkalti/backoff/v4"
 )
-
-type Post struct {
-	ImageUri string
-	Tags     []string
-}
-
-func getPosts(baseUrl string) ([]Post, error) {
-	var (
-		err      error
-		response *http.Response
-	)
-
-	if response, err = http.Get(fmt.Sprintf("%s/posts", baseUrl)); err != nil {
-		return nil, err
-	}
-
-	gotStatusCode := response.StatusCode
-	wantStatusCode := 200
-
-	if gotStatusCode != wantStatusCode {
-		return nil, fmt.Errorf("got status code %d want %d", gotStatusCode, wantStatusCode)
-	}
-
-	var posts []Post
-	defer response.Body.Close()
-	err = json.NewDecoder(response.Body).Decode(&posts)
-	return posts, err
-}
-
-func createPost(baseUrl string, post Post) error {
-	var (
-		err         error
-		requestBody []byte
-		response    *http.Response
-	)
-
-	if requestBody, err = json.Marshal(post); err != nil {
-		return err
-	}
-
-	if response, err = http.Post(
-		fmt.Sprintf("%s/posts", baseUrl),
-		"application/json",
-		bytes.NewBuffer(requestBody),
-	); err != nil {
-		return err
-	}
-
-	gotStatusCode := response.StatusCode
-	wantStatusCode := 201
-
-	if gotStatusCode != wantStatusCode {
-		return fmt.Errorf("got status code %d want %d", gotStatusCode, wantStatusCode)
-	}
-	return nil
-}
-
-func deletePosts(baseUrl string) error {
-	var (
-		err      error
-		request  *http.Request
-		response *http.Response
-	)
-
-	if request, err = http.NewRequest(
-		http.MethodDelete,
-		fmt.Sprintf("%s/posts", baseUrl),
-		nil,
-	); err != nil {
-		return err
-	}
-
-	if response, err = http.DefaultClient.Do(request); err != nil {
-		return err
-	}
-
-	gotStatusCode := response.StatusCode
-	wantStatusCode := 204
-
-	if gotStatusCode != wantStatusCode {
-		return fmt.Errorf("got status code %d want %d", gotStatusCode, wantStatusCode)
-	}
-	return nil
-}
 
 func TestAcceptance(t *testing.T) {
 	baseUrl := os.Getenv("BASE_URL")
@@ -188,29 +101,17 @@ func TestAcceptance(t *testing.T) {
 	})
 
 	t.Run("GET /version returns sha1 and version", func(t *testing.T) {
-		response, err := http.Get(fmt.Sprintf("%s/version", baseUrl))
-		assertutil.NotError(t, err)
-
-		gotStatusCode := response.StatusCode
-		wantStatusCode := 200
-
-		if gotStatusCode != wantStatusCode {
-			t.Errorf("got status code %d want %d", gotStatusCode, wantStatusCode)
-		}
-
-		var gotBody map[string]string
-		defer response.Body.Close()
-		err = json.NewDecoder(response.Body).Decode(&gotBody)
+		build, err := getVersion(baseUrl)
 		assertutil.NotError(t, err)
 
 		sha1Pattern := regexp.MustCompile("^[0-9a-f]{40}(-dirty)?$")
 		versionPattern := regexp.MustCompile("^\\d+\\.\\d+\\.\\d+$")
 
-		if !sha1Pattern.MatchString(gotBody["sha1"]) {
-			t.Errorf("got sha1 %s want 40 hex digits", gotBody["sha1"])
+		if !sha1Pattern.MatchString(build.Sha1) {
+			t.Errorf("got sha1 %s want 40 hex digits", build.Sha1)
 		}
-		if !versionPattern.MatchString(gotBody["version"]) && !sha1Pattern.MatchString(gotBody["version"]) {
-			t.Errorf("got version %s want semver or 40 hex digits", gotBody["version"])
+		if !versionPattern.MatchString(build.Version) && !sha1Pattern.MatchString(build.Version) {
+			t.Errorf("got version %s want semver or 40 hex digits", build.Version)
 		}
 	})
 }
