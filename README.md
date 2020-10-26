@@ -1,5 +1,5 @@
 # hashbang
-Template for Golang HTTP APIs
+Instagram tag manager
 ## Run the tests
 ```
 $ go test github.com/arctair/hashbang/v1
