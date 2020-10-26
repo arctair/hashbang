@@ -11,15 +11,14 @@ $ nodemon
 ```
 ### Run the tests against a deployment
 ```
-$ BASE_URL=https://your_deployment.com go test -tags acceptance
+$ BASE_URL=https://hashbang.arctair.com go test -tags acceptance
 ```
 ## Run the server
 ```
 $ go run .
 $ curl localhost:5000
 ```
-## Build a docker image
+## Build and deploy
 ```
-$ go build -o bin/hashbang
-$ docker build -t arctair/hashbang .
+$ scripts/dockerBuildPush && scripts/deploy
 ```
