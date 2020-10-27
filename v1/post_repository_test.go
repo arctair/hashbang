@@ -29,7 +29,7 @@ func TestPostRepository(t *testing.T) {
 			t.Errorf("got %+v want %+v", gotPosts, wantPosts)
 		}
 
-		postRepository.Create(
+		NewPostRepository(connection).Create(
 			Post{
 				ImageUri: "https://images.unsplash.com/photo-1603316851229-26637b4bd1b8?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1400&q=80",
 				Tags: []string{
@@ -56,7 +56,7 @@ func TestPostRepository(t *testing.T) {
 
 		NewPostRepository(connection).DeleteAll()
 
-		gotPosts = postRepository.FindAll()
+		gotPosts = NewPostRepository(connection).FindAll()
 		wantPosts = []Post{}
 
 		if !reflect.DeepEqual(gotPosts, wantPosts) {
