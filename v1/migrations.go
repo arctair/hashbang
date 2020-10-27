@@ -8,6 +8,6 @@ import (
 
 // Migrate ...
 func Migrate(connection *pgx.Conn) error {
-	_, err := connection.Exec(context.Background(), "create table posts if not exists (\"imageUri\" text, \"tags\" text[])")
+	_, err := connection.Exec(context.Background(), "create table if not exists posts (\"imageUri\" text, \"tags\" text[])")
 	return err
 }
