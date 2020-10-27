@@ -21,6 +21,8 @@ spec:
         image: arctair/hashbang:`scripts/versionByDepth`
         ports:
         - containerPort: 5000
+        env:
+        - DATABASE_URL=postgres://cockroachdb:26257
 ---
 apiVersion: v1
 kind: Service
