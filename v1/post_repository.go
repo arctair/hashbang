@@ -9,16 +9,17 @@ import (
 // PostRepository ...
 type PostRepository interface {
 	FindAll() []Post
-	Create(post Post)
+	Create(post Post) Post
 	DeleteAll()
 }
 
 type postRepository struct {
-	connection *pgx.Conn
+	connection    *pgx.Conn
+	uuidGenerator UuidGenerator
 }
 
 func (r *postRepository) FindAll() []Post {
-	rows, err := r.connection.Query(context.Background(), "select \"imageUri\", \"tags\" from posts")
+	rows, err := r.connection.Query(context.Background(), "select \"id\", \"imageUri\", \"tags\" from posts")
 	if err != nil {
 		panic(err)
 	}
@@ -27,18 +28,20 @@ func (r *postRepository) FindAll() []Post {
 
 	var post Post
 	for rows.Next() {
-		rows.Scan(&post.ImageUri, &post.Tags)
+		rows.Scan(&post.Id, &post.ImageUri, &post.Tags)
 		posts = append(posts, post)
 	}
 
 	return posts
 }
 
-func (r *postRepository) Create(post Post) {
-	_, err := r.connection.Exec(context.Background(), "insert into posts (\"imageUri\", \"tags\") values ($1, $2)", post.ImageUri, post.Tags)
+func (r *postRepository) Create(post Post) Post {
+	post.Id = r.uuidGenerator.Generate()
+	_, err := r.connection.Exec(context.Background(), "insert into posts (\"id\", \"imageUri\", \"tags\") values ($1, $2, $3)", post.Id, post.ImageUri, post.Tags)
 	if err != nil {
 		panic(err)
 	}
+	return post
 }
 
 func (r *postRepository) DeleteAll() {
@@ -49,8 +52,12 @@ func (r *postRepository) DeleteAll() {
 }
 
 // NewPostRepository ...
-func NewPostRepository(connection *pgx.Conn) PostRepository {
+func NewPostRepository(
+	connection *pgx.Conn,
+	uuidGenerator UuidGenerator,
+) PostRepository {
 	return &postRepository{
-		connection: connection,
+		connection:    connection,
+		uuidGenerator: uuidGenerator,
 	}
 }

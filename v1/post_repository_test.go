@@ -10,6 +10,12 @@ import (
 	"github.com/jackc/pgx/v4"
 )
 
+type stubUuidGenerator struct{}
+
+func (g *stubUuidGenerator) Generate() string {
+	return "60c22418-c104-48e3-a30a-c318e17b3007"
+}
+
 func TestPostRepository(t *testing.T) {
 	testServer, err := testserver.NewTestServer()
 	defer testServer.Stop()
@@ -19,17 +25,15 @@ func TestPostRepository(t *testing.T) {
 	assertutil.NotError(t, err)
 	assertutil.NotError(t, Migrate(connection))
 
-	postRepository := NewPostRepository(connection)
-
 	t.Run("create, get, delete post", func(t *testing.T) {
-		gotPosts := NewPostRepository(connection).FindAll()
+		gotPosts := NewPostRepository(connection, &stubUuidGenerator{}).FindAll()
 		wantPosts := []Post{}
 
 		if !reflect.DeepEqual(gotPosts, wantPosts) {
 			t.Errorf("got %+v want %+v", gotPosts, wantPosts)
 		}
 
-		NewPostRepository(connection).Create(
+		gotPost := NewPostRepository(connection, &stubUuidGenerator{}).Create(
 			Post{
 				ImageUri: "https://images.unsplash.com/photo-1603316851229-26637b4bd1b8?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1400&q=80",
 				Tags: []string{
@@ -38,10 +42,23 @@ func TestPostRepository(t *testing.T) {
 				},
 			},
 		)
+		wantPost := Post{
+			Id:       "60c22418-c104-48e3-a30a-c318e17b3007",
+			ImageUri: "https://images.unsplash.com/photo-1603316851229-26637b4bd1b8?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1400&q=80",
+			Tags: []string{
+				"#windy",
+				"#tdd",
+			},
+		}
 
-		gotPosts = NewPostRepository(connection).FindAll()
+		if !reflect.DeepEqual(gotPost, wantPost) {
+			t.Errorf("got post %+q want %+q", gotPost, wantPost)
+		}
+
+		gotPosts = NewPostRepository(connection, &stubUuidGenerator{}).FindAll()
 		wantPosts = []Post{
 			{
+				Id:       "60c22418-c104-48e3-a30a-c318e17b3007",
 				ImageUri: "https://images.unsplash.com/photo-1603316851229-26637b4bd1b8?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1400&q=80",
 				Tags: []string{
 					"#windy",
@@ -54,9 +71,9 @@ func TestPostRepository(t *testing.T) {
 			t.Errorf("got posts %+v want %+v", gotPosts, wantPosts)
 		}
 
-		NewPostRepository(connection).DeleteAll()
+		NewPostRepository(connection, &stubUuidGenerator{}).DeleteAll()
 
-		gotPosts = NewPostRepository(connection).FindAll()
+		gotPosts = NewPostRepository(connection, &stubUuidGenerator{}).FindAll()
 		wantPosts = []Post{}
 
 		if !reflect.DeepEqual(gotPosts, wantPosts) {

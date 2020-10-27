@@ -26,8 +26,9 @@ func (r *stubPostRepository) FindAll() []Post {
 	}
 }
 
-func (r *stubPostRepository) Create(post Post) {
-	r.created = post
+func (r *stubPostRepository) Create(post Post) Post {
+	post.Id = "80000000-0000-0000-0000-000000000000"
+	return post
 }
 
 func (r *stubPostRepository) DeleteAll() {
@@ -100,8 +101,13 @@ func TestPostController(t *testing.T) {
 			t.Errorf("got status code %d want %d", gotStatusCode, wantStatusCode)
 		}
 
-		gotCreated := repository.created
-		wantCreated := Post{
+		var gotPost Post
+		if err := json.NewDecoder(response.Body).Decode(&gotPost); err != nil {
+			t.Fatal(err)
+		}
+
+		wantPost := Post{
+			Id:       "80000000-0000-0000-0000-000000000000",
 			ImageUri: "https://images.unsplash.com/photo-1603316851229-26637b4bd1b8?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1400&q=80",
 			Tags: []string{
 				"#windy",
@@ -109,8 +115,8 @@ func TestPostController(t *testing.T) {
 			},
 		}
 
-		if !reflect.DeepEqual(gotCreated, wantCreated) {
-			t.Errorf("got created %q want %q", gotCreated, wantCreated)
+		if !reflect.DeepEqual(gotPost, wantPost) {
+			t.Errorf("got post %+q want %+q", gotPost, wantPost)
 		}
 	})
 

@@ -10,6 +10,7 @@ import (
 )
 
 type Post struct {
+	Id       string
 	ImageUri string
 	Tags     []string
 }
@@ -42,7 +43,7 @@ func getPosts(baseUrl string) ([]Post, error) {
 	return posts, err
 }
 
-func createPost(baseUrl string, post Post) error {
+func createPost(baseUrl string, post Post) (*Post, error) {
 	var (
 		err         error
 		requestBody []byte
@@ -50,7 +51,7 @@ func createPost(baseUrl string, post Post) error {
 	)
 
 	if requestBody, err = json.Marshal(post); err != nil {
-		return err
+		return nil, err
 	}
 
 	if response, err = http.Post(
@@ -58,16 +59,19 @@ func createPost(baseUrl string, post Post) error {
 		"application/json",
 		bytes.NewBuffer(requestBody),
 	); err != nil {
-		return err
+		return nil, err
 	}
 
 	gotStatusCode := response.StatusCode
 	wantStatusCode := 201
 
 	if gotStatusCode != wantStatusCode {
-		return fmt.Errorf("got status code %d want %d", gotStatusCode, wantStatusCode)
+		return nil, fmt.Errorf("got status code %d want %d", gotStatusCode, wantStatusCode)
 	}
-	return nil
+
+	defer response.Body.Close()
+	err = json.NewDecoder(response.Body).Decode(&post)
+	return &post, err
 }
 
 func deletePosts(baseUrl string) error {

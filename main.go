@@ -33,6 +33,7 @@ func StartHTTPServer(wg *sync.WaitGroup) *http.Server {
 			v1.NewPostController(
 				v1.NewPostRepository(
 					connection,
+					v1.NewUuidGenerator(),
 				),
 			),
 			v1.NewVersionController(

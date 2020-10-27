@@ -62,7 +62,7 @@ func TestAcceptance(t *testing.T) {
 		}
 
 		// create post
-		if err = createPost(
+		gotPost, err := createPost(
 			baseUrl,
 			Post{
 				ImageUri: "https://images.unsplash.com/photo-1603316851229-26637b4bd1b8?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1400&q=80",
@@ -71,8 +71,24 @@ func TestAcceptance(t *testing.T) {
 					"#tdd",
 				},
 			},
-		); err != nil {
-			t.Fatal(err)
+		)
+		assertutil.NotError(t, err)
+
+		uuidPattern := regexp.MustCompile("^[0-9a-f-]{36}$")
+		wantPost := &Post{
+			Id:       gotPost.Id,
+			ImageUri: "https://images.unsplash.com/photo-1603316851229-26637b4bd1b8?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1400&q=80",
+			Tags: []string{
+				"#windy",
+				"#tdd",
+			},
+		}
+
+		if !uuidPattern.MatchString(gotPost.Id) {
+			t.Errorf("got id %s want /^[0-9a-f-]{36}$/", gotPost.Id)
+		}
+		if !reflect.DeepEqual(gotPost, wantPost) {
+			t.Errorf("got post %+v want %+v", gotPost, wantPost)
 		}
 
 		// get posts is not empty
@@ -81,6 +97,7 @@ func TestAcceptance(t *testing.T) {
 
 		wantPosts = []Post{
 			{
+				Id:       gotPost.Id,
 				ImageUri: "https://images.unsplash.com/photo-1603316851229-26637b4bd1b8?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1400&q=80",
 				Tags: []string{
 					"#windy",

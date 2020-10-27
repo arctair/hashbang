@@ -45,8 +45,14 @@ func (c *postController) CreatePost() http.Handler {
 			if err := json.NewDecoder(r.Body).Decode(&post); err != nil {
 				panic(err)
 			}
-			c.postRepository.Create(post)
+			bytes, err := json.Marshal(
+				c.postRepository.Create(post),
+			)
+			if err != nil {
+				panic(err)
+			}
 			rw.WriteHeader(201)
+			rw.Write(bytes)
 		},
 	)
 }
