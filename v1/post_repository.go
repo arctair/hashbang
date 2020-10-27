@@ -15,7 +15,6 @@ type PostRepository interface {
 
 type postRepository struct {
 	connection *pgx.Conn
-	posts      []Post
 }
 
 func (r *postRepository) FindAll() []Post {
@@ -53,6 +52,5 @@ func (r *postRepository) DeleteAll() {
 func NewPostRepository(connection *pgx.Conn) PostRepository {
 	return &postRepository{
 		connection: connection,
-		posts:      []Post{},
 	}
 }

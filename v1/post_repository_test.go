@@ -22,7 +22,7 @@ func TestPostRepository(t *testing.T) {
 	postRepository := NewPostRepository(connection)
 
 	t.Run("create, get, delete post", func(t *testing.T) {
-		gotPosts := postRepository.FindAll()
+		gotPosts := NewPostRepository(connection).FindAll()
 		wantPosts := []Post{}
 
 		if !reflect.DeepEqual(gotPosts, wantPosts) {
@@ -39,7 +39,7 @@ func TestPostRepository(t *testing.T) {
 			},
 		)
 
-		gotPosts = postRepository.FindAll()
+		gotPosts = NewPostRepository(connection).FindAll()
 		wantPosts = []Post{
 			{
 				ImageUri: "https://images.unsplash.com/photo-1603316851229-26637b4bd1b8?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1400&q=80",
@@ -54,7 +54,7 @@ func TestPostRepository(t *testing.T) {
 			t.Errorf("got posts %+v want %+v", gotPosts, wantPosts)
 		}
 
-		postRepository.DeleteAll()
+		NewPostRepository(connection).DeleteAll()
 
 		gotPosts = postRepository.FindAll()
 		wantPosts = []Post{}
