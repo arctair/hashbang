@@ -23,7 +23,7 @@ spec:
         - containerPort: 5000
         env:
         - name: DATABASE_URL
-          value: postgres://hashbang@cockroachdb:26257/hashbang
+          value: postgres://hashbang:hashbang@cockroachdb:26257/hashbang
 ---
 apiVersion: v1
 kind: Service
