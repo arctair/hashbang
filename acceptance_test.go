@@ -51,7 +51,7 @@ func TestAcceptance(t *testing.T) {
 		)
 	}
 
-	t.Run("create and get posts", func(t *testing.T) {
+	t.Run("life of a post", func(t *testing.T) {
 		// get posts is empty
 		gotPosts, err := getPosts(baseUrl)
 		assertutil.NotError(t, err)
