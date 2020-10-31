@@ -19,8 +19,6 @@ func TestPostRepository(t *testing.T) {
 	assertutil.NotError(t, err)
 	assertutil.NotError(t, Migrate(connection))
 
-	postRepository := NewPostRepository(connection)
-
 	t.Run("create, get, delete post", func(t *testing.T) {
 		gotPosts := NewPostRepository(connection).FindAll()
 		wantPosts := []Post{}
