@@ -29,10 +29,6 @@ func Migrate(connection *pgx.Conn) error {
 		"create table named_tag_lists (\"imageUri\" text, \"tags\" text[])",
 	}
 
-	if schemaVersion >= len(migrations) {
-		return nil
-	}
-
 	for index, migration := range migrations {
 		if index < schemaVersion {
 			fmt.Printf("Skipping migration %d: %s\n", index, migration)
