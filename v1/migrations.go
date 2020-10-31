@@ -33,11 +33,15 @@ func Migrate(connection *pgx.Conn) error {
 		return nil
 	}
 
-	for index, migration := range migrations[schemaVersion:] {
-		fmt.Printf("Running migration %d: %s\n", index, migration)
-		_, err = connection.Exec(context.Background(), migration)
-		if err != nil {
-			return fmt.Errorf("Failed to migrate %d: %s", index, err)
+	for index, migration := range migrations {
+		if index < schemaVersion {
+			fmt.Printf("Skipping migration %d: %s\n", index, migration)
+		} else {
+			fmt.Printf("Running migration %d: %s\n", index, migration)
+			_, err = connection.Exec(context.Background(), migration)
+			if err != nil {
+				return fmt.Errorf("Failed to migrate %d: %s", index, err)
+			}
 		}
 	}
 
