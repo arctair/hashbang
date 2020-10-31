@@ -6,17 +6,17 @@ import (
 
 // Router ...
 type Router struct {
-	postController    PostController
-	versionController VersionController
+	namedTagListController NamedTagListController
+	versionController      VersionController
 }
 
 // NewRouter ...
 func NewRouter(
-	postController PostController,
+	namedTagListController NamedTagListController,
 	versionController VersionController,
 ) *Router {
 	return &Router{
-		postController,
+		namedTagListController,
 		versionController,
 	}
 }
@@ -25,12 +25,12 @@ func (router *Router) ServeHTTP(w http.ResponseWriter, request *http.Request) {
 	serveMux := http.NewServeMux()
 	switch request.Method {
 	case http.MethodGet:
-		serveMux.Handle("/posts", router.postController.GetPosts())
+		serveMux.Handle("/namedTagLists", router.namedTagListController.GetNamedTagLists())
 		serveMux.Handle("/version", router.versionController.HandlerFunc())
 	case http.MethodPost:
-		serveMux.Handle("/posts", router.postController.CreatePost())
+		serveMux.Handle("/namedTagLists", router.namedTagListController.CreateNamedTagList())
 	case http.MethodDelete:
-		serveMux.Handle("/posts", router.postController.DeletePost())
+		serveMux.Handle("/namedTagLists", router.namedTagListController.DeleteNamedTagLists())
 	}
 	serveMux.ServeHTTP(w, request)
 }

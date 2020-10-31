@@ -10,7 +10,7 @@ import (
 	"github.com/jackc/pgx/v4"
 )
 
-func TestPostRepository(t *testing.T) {
+func TestNamedTagListRepository(t *testing.T) {
 	testServer, err := testserver.NewTestServer()
 	defer testServer.Stop()
 	assertutil.NotError(t, err)
@@ -19,16 +19,16 @@ func TestPostRepository(t *testing.T) {
 	assertutil.NotError(t, err)
 	assertutil.NotError(t, Migrate(connection))
 
-	t.Run("create, get, delete post", func(t *testing.T) {
-		gotPosts := NewPostRepository(connection).FindAll()
-		wantPosts := []Post{}
+	t.Run("create, get, delete named tag list", func(t *testing.T) {
+		got := NewNamedTagListRepository(connection).FindAll()
+		want := []NamedTagList{}
 
-		if !reflect.DeepEqual(gotPosts, wantPosts) {
-			t.Errorf("got %+v want %+v", gotPosts, wantPosts)
+		if !reflect.DeepEqual(got, want) {
+			t.Errorf("got %+v want %+v", got, want)
 		}
 
-		NewPostRepository(connection).Create(
-			Post{
+		NewNamedTagListRepository(connection).Create(
+			NamedTagList{
 				ImageUri: "https://images.unsplash.com/photo-1603316851229-26637b4bd1b8?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1400&q=80",
 				Tags: []string{
 					"#windy",
@@ -37,8 +37,8 @@ func TestPostRepository(t *testing.T) {
 			},
 		)
 
-		gotPosts = NewPostRepository(connection).FindAll()
-		wantPosts = []Post{
+		got = NewNamedTagListRepository(connection).FindAll()
+		want = []NamedTagList{
 			{
 				ImageUri: "https://images.unsplash.com/photo-1603316851229-26637b4bd1b8?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1400&q=80",
 				Tags: []string{
@@ -48,17 +48,17 @@ func TestPostRepository(t *testing.T) {
 			},
 		}
 
-		if !reflect.DeepEqual(gotPosts, wantPosts) {
-			t.Errorf("got posts %+v want %+v", gotPosts, wantPosts)
+		if !reflect.DeepEqual(got, want) {
+			t.Errorf("got %+v want %+v", got, want)
 		}
 
-		NewPostRepository(connection).DeleteAll()
+		NewNamedTagListRepository(connection).DeleteAll()
 
-		gotPosts = NewPostRepository(connection).FindAll()
-		wantPosts = []Post{}
+		got = NewNamedTagListRepository(connection).FindAll()
+		want = []NamedTagList{}
 
-		if !reflect.DeepEqual(gotPosts, wantPosts) {
-			t.Errorf("got posts %+v want %+v", gotPosts, wantPosts)
+		if !reflect.DeepEqual(got, want) {
+			t.Errorf("got %+v want %+v", got, want)
 		}
 	})
 }

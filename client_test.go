@@ -9,7 +9,7 @@ import (
 	"net/http"
 )
 
-type Post struct {
+type NamedTagList struct {
 	ImageUri string
 	Tags     []string
 }
@@ -19,13 +19,13 @@ type Build struct {
 	Version string
 }
 
-func getPosts(baseUrl string) ([]Post, error) {
+func getNamedTagLists(baseUrl string) ([]NamedTagList, error) {
 	var (
 		err      error
 		response *http.Response
 	)
 
-	if response, err = http.Get(fmt.Sprintf("%s/posts", baseUrl)); err != nil {
+	if response, err = http.Get(fmt.Sprintf("%s/namedTagLists", baseUrl)); err != nil {
 		return nil, err
 	}
 
@@ -36,25 +36,25 @@ func getPosts(baseUrl string) ([]Post, error) {
 		return nil, fmt.Errorf("got status code %d want %d", gotStatusCode, wantStatusCode)
 	}
 
-	var posts []Post
+	var namedTagLists []NamedTagList
 	defer response.Body.Close()
-	err = json.NewDecoder(response.Body).Decode(&posts)
-	return posts, err
+	err = json.NewDecoder(response.Body).Decode(&namedTagLists)
+	return namedTagLists, err
 }
 
-func createPost(baseUrl string, post Post) error {
+func createNamedTagList(baseUrl string, namedTagList NamedTagList) error {
 	var (
 		err         error
 		requestBody []byte
 		response    *http.Response
 	)
 
-	if requestBody, err = json.Marshal(post); err != nil {
+	if requestBody, err = json.Marshal(namedTagList); err != nil {
 		return err
 	}
 
 	if response, err = http.Post(
-		fmt.Sprintf("%s/posts", baseUrl),
+		fmt.Sprintf("%s/namedTagLists", baseUrl),
 		"application/json",
 		bytes.NewBuffer(requestBody),
 	); err != nil {
@@ -70,7 +70,7 @@ func createPost(baseUrl string, post Post) error {
 	return nil
 }
 
-func deletePosts(baseUrl string) error {
+func deleteNamedTagLists(baseUrl string) error {
 	var (
 		err      error
 		request  *http.Request
@@ -79,7 +79,7 @@ func deletePosts(baseUrl string) error {
 
 	if request, err = http.NewRequest(
 		http.MethodDelete,
-		fmt.Sprintf("%s/posts", baseUrl),
+		fmt.Sprintf("%s/namedTagLists", baseUrl),
 		nil,
 	); err != nil {
 		return err

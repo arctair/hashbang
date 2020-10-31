@@ -5,29 +5,29 @@ import (
 	"net/http"
 )
 
-// PostController ...
-type PostController interface {
-	GetPosts() http.Handler
-	CreatePost() http.Handler
-	DeletePost() http.Handler
+// NamedTagListController ...
+type NamedTagListController interface {
+	GetNamedTagLists() http.Handler
+	CreateNamedTagList() http.Handler
+	DeleteNamedTagLists() http.Handler
 }
 
-type postController struct {
-	postRepository PostRepository
+type namedTagListController struct {
+	namedTagListRepository NamedTagListRepository
 }
 
-// NewPostController ...
-func NewPostController(postRepository PostRepository) PostController {
-	return &postController{
-		postRepository,
+// NewNamedTagListController ...
+func NewNamedTagListController(namedTagListRepository NamedTagListRepository) NamedTagListController {
+	return &namedTagListController{
+		namedTagListRepository,
 	}
 }
 
-func (c *postController) GetPosts() http.Handler {
+func (c *namedTagListController) GetNamedTagLists() http.Handler {
 	return http.HandlerFunc(
 		func(rw http.ResponseWriter, r *http.Request) {
 			bytes, err := json.Marshal(
-				c.postRepository.FindAll(),
+				c.namedTagListRepository.FindAll(),
 			)
 			if err != nil {
 				panic(err)
@@ -37,24 +37,24 @@ func (c *postController) GetPosts() http.Handler {
 	)
 }
 
-func (c *postController) CreatePost() http.Handler {
+func (c *namedTagListController) CreateNamedTagList() http.Handler {
 	return http.HandlerFunc(
 		func(rw http.ResponseWriter, r *http.Request) {
 			defer r.Body.Close()
-			var post Post
-			if err := json.NewDecoder(r.Body).Decode(&post); err != nil {
+			var namedTagList NamedTagList
+			if err := json.NewDecoder(r.Body).Decode(&namedTagList); err != nil {
 				panic(err)
 			}
-			c.postRepository.Create(post)
+			c.namedTagListRepository.Create(namedTagList)
 			rw.WriteHeader(201)
 		},
 	)
 }
 
-func (c *postController) DeletePost() http.Handler {
+func (c *namedTagListController) DeleteNamedTagLists() http.Handler {
 	return http.HandlerFunc(
 		func(rw http.ResponseWriter, r *http.Request) {
-			c.postRepository.DeleteAll()
+			c.namedTagListRepository.DeleteAll()
 			rw.WriteHeader(204)
 		},
 	)

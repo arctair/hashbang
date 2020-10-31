@@ -51,20 +51,20 @@ func TestAcceptance(t *testing.T) {
 		)
 	}
 
-	t.Run("life of a post", func(t *testing.T) {
-		// get posts is empty
-		gotPosts, err := getPosts(baseUrl)
+	t.Run("life of a named tag list", func(t *testing.T) {
+		// get named tag lists is empty
+		gotNamedTagLists, err := getNamedTagLists(baseUrl)
 		assertutil.NotError(t, err)
-		wantPosts := []Post{}
+		wantNamedTagLists := []NamedTagList{}
 
-		if !reflect.DeepEqual(gotPosts, wantPosts) {
-			t.Errorf("got posts %+v want %+v", gotPosts, wantPosts)
+		if !reflect.DeepEqual(gotNamedTagLists, wantNamedTagLists) {
+			t.Errorf("got named tag lists %+v want %+v", gotNamedTagLists, wantNamedTagLists)
 		}
 
-		// create post
-		if err = createPost(
+		// create named tag list
+		if err = createNamedTagList(
 			baseUrl,
-			Post{
+			NamedTagList{
 				ImageUri: "https://images.unsplash.com/photo-1603316851229-26637b4bd1b8?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1400&q=80",
 				Tags: []string{
 					"#windy",
@@ -75,11 +75,11 @@ func TestAcceptance(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		// get posts is not empty
-		gotPosts, err = getPosts(baseUrl)
+		// get named tag lists is not empty
+		gotNamedTagLists, err = getNamedTagLists(baseUrl)
 		assertutil.NotError(t, err)
 
-		wantPosts = []Post{
+		wantNamedTagLists = []NamedTagList{
 			{
 				ImageUri: "https://images.unsplash.com/photo-1603316851229-26637b4bd1b8?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1400&q=80",
 				Tags: []string{
@@ -89,21 +89,21 @@ func TestAcceptance(t *testing.T) {
 			},
 		}
 
-		if !reflect.DeepEqual(gotPosts, wantPosts) {
-			t.Errorf("got posts %+v want %+v", gotPosts, wantPosts)
+		if !reflect.DeepEqual(gotNamedTagLists, wantNamedTagLists) {
+			t.Errorf("got named tag lists %+v want %+v", gotNamedTagLists, wantNamedTagLists)
 		}
 
-		// delete posts
-		err = deletePosts(baseUrl)
+		// delete named tag lists
+		err = deleteNamedTagLists(baseUrl)
 		assertutil.NotError(t, err)
 
-		// get posts is empty
-		gotPosts, err = getPosts(baseUrl)
+		// get named tag lists is empty
+		gotNamedTagLists, err = getNamedTagLists(baseUrl)
 		assertutil.NotError(t, err)
-		wantPosts = []Post{}
+		wantNamedTagLists = []NamedTagList{}
 
-		if !reflect.DeepEqual(gotPosts, wantPosts) {
-			t.Errorf("got posts %+v want %+v", gotPosts, wantPosts)
+		if !reflect.DeepEqual(gotNamedTagLists, wantNamedTagLists) {
+			t.Errorf("got named tag lists %+v want %+v", gotNamedTagLists, wantNamedTagLists)
 		}
 	})
 

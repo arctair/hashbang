@@ -6,51 +6,51 @@ import (
 	"github.com/jackc/pgx/v4"
 )
 
-// PostRepository ...
-type PostRepository interface {
-	FindAll() []Post
-	Create(post Post)
+// NamedTagListRepository ...
+type NamedTagListRepository interface {
+	FindAll() []NamedTagList
+	Create(namedTagList NamedTagList)
 	DeleteAll()
 }
 
-type postRepository struct {
+type namedTagListRepository struct {
 	connection *pgx.Conn
 }
 
-func (r *postRepository) FindAll() []Post {
-	rows, err := r.connection.Query(context.Background(), "select \"imageUri\", \"tags\" from posts")
+func (r *namedTagListRepository) FindAll() []NamedTagList {
+	rows, err := r.connection.Query(context.Background(), "select \"imageUri\", \"tags\" from named_tag_lists")
 	if err != nil {
 		panic(err)
 	}
 
-	posts := []Post{}
+	namedTagLists := []NamedTagList{}
 
-	var post Post
+	var namedTagList NamedTagList
 	for rows.Next() {
-		rows.Scan(&post.ImageUri, &post.Tags)
-		posts = append(posts, post)
+		rows.Scan(&namedTagList.ImageUri, &namedTagList.Tags)
+		namedTagLists = append(namedTagLists, namedTagList)
 	}
 
-	return posts
+	return namedTagLists
 }
 
-func (r *postRepository) Create(post Post) {
-	_, err := r.connection.Exec(context.Background(), "insert into posts (\"imageUri\", \"tags\") values ($1, $2)", post.ImageUri, post.Tags)
+func (r *namedTagListRepository) Create(namedTagList NamedTagList) {
+	_, err := r.connection.Exec(context.Background(), "insert into named_tag_lists (\"imageUri\", \"tags\") values ($1, $2)", namedTagList.ImageUri, namedTagList.Tags)
 	if err != nil {
 		panic(err)
 	}
 }
 
-func (r *postRepository) DeleteAll() {
-	_, err := r.connection.Exec(context.Background(), "delete from posts")
+func (r *namedTagListRepository) DeleteAll() {
+	_, err := r.connection.Exec(context.Background(), "delete from named_tag_lists")
 	if err != nil {
 		panic(err)
 	}
 }
 
-// NewPostRepository ...
-func NewPostRepository(connection *pgx.Conn) PostRepository {
-	return &postRepository{
+// NewNamedTagListRepository ...
+func NewNamedTagListRepository(connection *pgx.Conn) NamedTagListRepository {
+	return &namedTagListRepository{
 		connection: connection,
 	}
 }

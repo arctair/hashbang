@@ -1,7 +1,7 @@
 package v1
 
-// Post ...
-type Post struct {
+// NamedTagList ...
+type NamedTagList struct {
 	ImageUri string   `json:"imageUri"`
 	Tags     []string `json:"tags"`
 }

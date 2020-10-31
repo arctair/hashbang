@@ -26,6 +26,7 @@ func Migrate(connection *pgx.Conn) error {
 
 	migrations := []string{
 		"create table if not exists posts (\"imageUri\" text, \"tags\" text[])",
+		"create table named_tag_lists (\"imageUri\" text, \"tags\" text[])",
 	}
 
 	if schemaVersion >= len(migrations) {

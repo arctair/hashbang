@@ -9,13 +9,13 @@ import (
 	"testing"
 )
 
-type stubPostRepository struct {
-	created    Post
+type stubNamedTagListRepository struct {
+	created    NamedTagList
 	deletedAll bool
 }
 
-func (r *stubPostRepository) FindAll() []Post {
-	return []Post{
+func (r *stubNamedTagListRepository) FindAll() []NamedTagList {
+	return []NamedTagList{
 		{
 			ImageUri: "https://images.unsplash.com/photo-1603316851229-26637b4bd1b8?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1400&q=80",
 			Tags: []string{
@@ -26,23 +26,23 @@ func (r *stubPostRepository) FindAll() []Post {
 	}
 }
 
-func (r *stubPostRepository) Create(post Post) {
-	r.created = post
+func (r *stubNamedTagListRepository) Create(namedTagList NamedTagList) {
+	r.created = namedTagList
 }
 
-func (r *stubPostRepository) DeleteAll() {
+func (r *stubNamedTagListRepository) DeleteAll() {
 	r.deletedAll = true
 }
 
-func TestPostController(t *testing.T) {
-	t.Run("GET returns posts", func(t *testing.T) {
-		postController := NewPostController(
-			&stubPostRepository{},
+func TestNamedTagListController(t *testing.T) {
+	t.Run("GET", func(t *testing.T) {
+		controller := NewNamedTagListController(
+			&stubNamedTagListRepository{},
 		)
 
 		request, _ := http.NewRequest(http.MethodGet, "/", nil)
 		response := httptest.NewRecorder()
-		postController.GetPosts().ServeHTTP(response, request)
+		controller.GetNamedTagLists().ServeHTTP(response, request)
 
 		gotStatusCode := response.Result().StatusCode
 		wantStatusCode := 200
@@ -51,12 +51,12 @@ func TestPostController(t *testing.T) {
 			t.Errorf("got status code %d want %d", gotStatusCode, wantStatusCode)
 		}
 
-		var gotPosts []Post
-		if err := json.NewDecoder(response.Body).Decode(&gotPosts); err != nil {
+		var gotNamedTagLists []NamedTagList
+		if err := json.NewDecoder(response.Body).Decode(&gotNamedTagLists); err != nil {
 			t.Fatal(err)
 		}
 
-		wantPosts := []Post{
+		wantNamedTagLists := []NamedTagList{
 			{
 				ImageUri: "https://images.unsplash.com/photo-1603316851229-26637b4bd1b8?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1400&q=80",
 				Tags: []string{
@@ -66,32 +66,32 @@ func TestPostController(t *testing.T) {
 			},
 		}
 
-		if !reflect.DeepEqual(gotPosts, wantPosts) {
-			t.Errorf("got posts %q want %q", gotPosts, wantPosts)
+		if !reflect.DeepEqual(gotNamedTagLists, wantNamedTagLists) {
+			t.Errorf("got named tag lists %q want %q", gotNamedTagLists, wantNamedTagLists)
 		}
 	})
 
-	t.Run("POST creates post", func(t *testing.T) {
-		repository := &stubPostRepository{}
-		postController := NewPostController(
+	t.Run("POST", func(t *testing.T) {
+		repository := &stubNamedTagListRepository{}
+		controller := NewNamedTagListController(
 			repository,
 		)
 
-		post := Post{
+		namedTagList := NamedTagList{
 			ImageUri: "https://images.unsplash.com/photo-1603316851229-26637b4bd1b8?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1400&q=80",
 			Tags: []string{
 				"#windy",
 				"#tdd",
 			},
 		}
-		requestBody, err := json.Marshal(post)
+		requestBody, err := json.Marshal(namedTagList)
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		request, _ := http.NewRequest(http.MethodPost, "/", bytes.NewBuffer(requestBody))
 		response := httptest.NewRecorder()
-		postController.CreatePost().ServeHTTP(response, request)
+		controller.CreateNamedTagList().ServeHTTP(response, request)
 
 		gotStatusCode := response.Result().StatusCode
 		wantStatusCode := 201
@@ -101,7 +101,7 @@ func TestPostController(t *testing.T) {
 		}
 
 		gotCreated := repository.created
-		wantCreated := Post{
+		wantCreated := NamedTagList{
 			ImageUri: "https://images.unsplash.com/photo-1603316851229-26637b4bd1b8?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1400&q=80",
 			Tags: []string{
 				"#windy",
@@ -114,15 +114,15 @@ func TestPostController(t *testing.T) {
 		}
 	})
 
-	t.Run("DELETE deletes posts", func(t *testing.T) {
-		repository := &stubPostRepository{}
-		postController := NewPostController(
+	t.Run("DELETE", func(t *testing.T) {
+		repository := &stubNamedTagListRepository{}
+		controller := NewNamedTagListController(
 			repository,
 		)
 
-		request, _ := http.NewRequest(http.MethodDelete, "/posts?id=8c907ab9-fef8-43ab-9103-b19aabfb40b2", nil)
+		request, _ := http.NewRequest(http.MethodDelete, "/namedTagLists", nil)
 		response := httptest.NewRecorder()
-		postController.DeletePost().ServeHTTP(response, request)
+		controller.DeleteNamedTagLists().ServeHTTP(response, request)
 
 		gotStatusCode := response.Result().StatusCode
 		wantStatusCode := 204

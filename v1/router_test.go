@@ -6,29 +6,29 @@ import (
 	"testing"
 )
 
-type stubPostController struct {
+type stubNamedTagListController struct {
 }
 
-func (c *stubPostController) GetPosts() http.Handler {
+func (c *stubNamedTagListController) GetNamedTagLists() http.Handler {
 	return http.HandlerFunc(
 		func(w http.ResponseWriter, r *http.Request) {
-			w.Write([]byte("the post controller body / get method"))
+			w.Write([]byte("the named tag list controller body / get method"))
 		},
 	)
 }
 
-func (c *stubPostController) CreatePost() http.Handler {
+func (c *stubNamedTagListController) CreateNamedTagList() http.Handler {
 	return http.HandlerFunc(
 		func(w http.ResponseWriter, r *http.Request) {
-			w.Write([]byte("the post controller body / post method"))
+			w.Write([]byte("the named tag list controller body / post method"))
 		},
 	)
 }
 
-func (c *stubPostController) DeletePost() http.Handler {
+func (c *stubNamedTagListController) DeleteNamedTagLists() http.Handler {
 	return http.HandlerFunc(
 		func(w http.ResponseWriter, r *http.Request) {
-			w.Write([]byte("the post controller body / delete method"))
+			w.Write([]byte("the named tag list controller body / delete method"))
 		},
 	)
 }
@@ -46,7 +46,7 @@ func (c *stubVersionController) HandlerFunc() http.Handler {
 
 func TestRouter(t *testing.T) {
 	router := NewRouter(
-		&stubPostController{},
+		&stubNamedTagListController{},
 		&stubVersionController{},
 	)
 
@@ -71,8 +71,8 @@ func TestRouter(t *testing.T) {
 		}
 	})
 
-	t.Run("Route GET /posts to post controller", func(t *testing.T) {
-		request, _ := http.NewRequest(http.MethodGet, "/posts", nil)
+	t.Run("Route GET /namedTagLists to named tag list controller", func(t *testing.T) {
+		request, _ := http.NewRequest(http.MethodGet, "/namedTagLists", nil)
 		response := httptest.NewRecorder()
 
 		router.ServeHTTP(response, request)
@@ -85,15 +85,15 @@ func TestRouter(t *testing.T) {
 		}
 
 		gotBody := string(response.Body.Bytes())
-		wantBody := "the post controller body / get method"
+		wantBody := "the named tag list controller body / get method"
 
 		if gotBody != wantBody {
 			t.Errorf("got body %s want %s", gotBody, wantBody)
 		}
 	})
 
-	t.Run("Route POST /posts to post controller", func(t *testing.T) {
-		request, _ := http.NewRequest(http.MethodPost, "/posts", nil)
+	t.Run("Route POST /namedTagLists to named tag list controller", func(t *testing.T) {
+		request, _ := http.NewRequest(http.MethodPost, "/namedTagLists", nil)
 		response := httptest.NewRecorder()
 
 		router.ServeHTTP(response, request)
@@ -106,15 +106,15 @@ func TestRouter(t *testing.T) {
 		}
 
 		gotBody := string(response.Body.Bytes())
-		wantBody := "the post controller body / post method"
+		wantBody := "the named tag list controller body / post method"
 
 		if gotBody != wantBody {
 			t.Errorf("got body %s want %s", gotBody, wantBody)
 		}
 	})
 
-	t.Run("Route DELETE /posts to post controller", func(t *testing.T) {
-		request, _ := http.NewRequest(http.MethodDelete, "/posts", nil)
+	t.Run("Route DELETE /namedTagLists to named tag list controller", func(t *testing.T) {
+		request, _ := http.NewRequest(http.MethodDelete, "/namedTagLists", nil)
 		response := httptest.NewRecorder()
 
 		router.ServeHTTP(response, request)
@@ -127,7 +127,7 @@ func TestRouter(t *testing.T) {
 		}
 
 		gotBody := string(response.Body.Bytes())
-		wantBody := "the post controller body / delete method"
+		wantBody := "the named tag list controller body / delete method"
 
 		if gotBody != wantBody {
 			t.Errorf("got body %s want %s", gotBody, wantBody)
