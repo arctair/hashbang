@@ -13,8 +13,6 @@ import (
 
 type stubNamedTagListRepository struct {
 	dummyNamedTagList NamedTagList
-	created           NamedTagList
-	deletedAll        bool
 	willError         bool
 }
 
@@ -26,15 +24,13 @@ func (r *stubNamedTagListRepository) FindAll() ([]NamedTagList, error) {
 }
 
 func (r *stubNamedTagListRepository) Create(namedTagList NamedTagList) error {
-	r.created = namedTagList
-	if r.willError {
+	if r.willError && reflect.DeepEqual(namedTagList, r.dummyNamedTagList) {
 		return errors.New("there was an error")
 	}
 	return nil
 }
 
 func (r *stubNamedTagListRepository) DeleteAll() error {
-	r.deletedAll = true
 	if r.willError {
 		return errors.New("there was an error")
 	}
@@ -122,12 +118,6 @@ func TestNamedTagListController(t *testing.T) {
 		if gotStatusCode != wantStatusCode {
 			t.Errorf("got status code %d want %d", gotStatusCode, wantStatusCode)
 		}
-
-		gotCreated := repository.created
-		wantCreated := dummyNamedTagList
-		if !reflect.DeepEqual(gotCreated, wantCreated) {
-			t.Errorf("got created %q want %q", gotCreated, wantCreated)
-		}
 	})
 
 	t.Run("POST when request body malformed", func(t *testing.T) {
@@ -150,7 +140,8 @@ func TestNamedTagListController(t *testing.T) {
 	t.Run("POST when repository has error", func(t *testing.T) {
 		controller := NewNamedTagListController(
 			&stubNamedTagListRepository{
-				willError: true,
+				dummyNamedTagList: dummyNamedTagList,
+				willError:         true,
 			},
 		)
 
@@ -186,12 +177,6 @@ func TestNamedTagListController(t *testing.T) {
 
 		if gotStatusCode != wantStatusCode {
 			t.Errorf("got status code %d want %d", gotStatusCode, wantStatusCode)
-		}
-
-		gotDeletedAll := repository.deletedAll
-
-		if !gotDeletedAll {
-			t.Errorf("got deleted all false wanted true")
 		}
 	})
 
