@@ -9,7 +9,8 @@ import (
 
 // Migration ...
 type Migration struct {
-	Sql string
+	Index int
+	Sql   string
 }
 
 // Migrate ...
@@ -30,20 +31,20 @@ func Migrate(connection *pgx.Conn) error {
 	err = row.Scan(&schemaVersion)
 
 	migrations := []Migration{
-		{Sql: "create table if not exists posts (\"imageUri\" text, \"tags\" text[])"},
-		{Sql: "create table named_tag_lists (\"imageUri\" text, \"tags\" text[])"},
-		{Sql: "drop table posts"},
-		{Sql: "create table named_tag_lists_2 (\"name\" text, \"tags\" text[])"},
+		{Index: 0, Sql: "create table if not exists posts (\"imageUri\" text, \"tags\" text[])"},
+		{Index: 1, Sql: "create table named_tag_lists (\"imageUri\" text, \"tags\" text[])"},
+		{Index: 2, Sql: "drop table posts"},
+		{Index: 3, Sql: "create table named_tag_lists_2 (\"name\" text, \"tags\" text[])"},
 	}
 
-	for index, migration := range migrations {
-		if index < schemaVersion {
-			fmt.Printf("Skipping migration %d: %s\n", index, migration.Sql)
+	for _, migration := range migrations {
+		if migration.Index < schemaVersion {
+			fmt.Printf("Skipping migration %d: %s\n", migration.Index, migration.Sql)
 		} else {
-			fmt.Printf("Running migration %d: %s\n", index, migration.Sql)
+			fmt.Printf("Running migration %d: %s\n", migration.Index, migration.Sql)
 			_, err = connection.Exec(context.Background(), migration.Sql)
 			if err != nil {
-				return fmt.Errorf("Failed to migrate %d: %s", index, err)
+				return fmt.Errorf("Failed to migrate %d: %s", migration.Index, err)
 			}
 		}
 	}
