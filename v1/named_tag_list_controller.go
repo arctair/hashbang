@@ -26,9 +26,14 @@ func NewNamedTagListController(namedTagListRepository NamedTagListRepository) Na
 func (c *namedTagListController) GetNamedTagLists() http.Handler {
 	return http.HandlerFunc(
 		func(rw http.ResponseWriter, r *http.Request) {
-			bytes, err := json.Marshal(
-				c.namedTagListRepository.FindAll(),
+			var (
+				namedTagLists []NamedTagList
+				err           error
 			)
+			if namedTagLists, err = c.namedTagListRepository.FindAll(); err != nil {
+				rw.WriteHeader(500)
+			}
+			bytes, err := json.Marshal(namedTagLists)
 			if err != nil {
 				panic(err)
 			}

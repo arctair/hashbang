@@ -8,7 +8,7 @@ import (
 
 // NamedTagListRepository ...
 type NamedTagListRepository interface {
-	FindAll() []NamedTagList
+	FindAll() ([]NamedTagList, error)
 	Create(namedTagList NamedTagList) error
 	DeleteAll() error
 }
@@ -17,21 +17,27 @@ type namedTagListRepository struct {
 	connection *pgx.Conn
 }
 
-func (r *namedTagListRepository) FindAll() []NamedTagList {
-	rows, err := r.connection.Query(context.Background(), "select \"name\", \"tags\" from named_tag_lists")
-	if err != nil {
-		panic(err)
+func (r *namedTagListRepository) FindAll() ([]NamedTagList, error) {
+	var (
+		rows pgx.Rows
+		err  error
+	)
+
+	if rows, err = r.connection.Query(context.Background(), "select \"name\", \"tags\" from named_tag_lists"); err != nil {
+		return nil, err
 	}
 
 	namedTagLists := []NamedTagList{}
 
 	var namedTagList NamedTagList
 	for rows.Next() {
-		rows.Scan(&namedTagList.Name, &namedTagList.Tags)
+		if err = rows.Scan(&namedTagList.Name, &namedTagList.Tags); err != nil {
+			return nil, err
+		}
 		namedTagLists = append(namedTagLists, namedTagList)
 	}
 
-	return namedTagLists
+	return namedTagLists, nil
 }
 
 func (r *namedTagListRepository) Create(namedTagList NamedTagList) error {

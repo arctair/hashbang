@@ -20,7 +20,7 @@ func TestNamedTagListRepository(t *testing.T) {
 	assertutil.NotError(t, Migrate(connection))
 
 	t.Run("create, get, delete named tag list", func(t *testing.T) {
-		got := NewNamedTagListRepository(connection).FindAll()
+		got, _ := NewNamedTagListRepository(connection).FindAll()
 		want := []NamedTagList{}
 
 		if !reflect.DeepEqual(got, want) {
@@ -37,7 +37,7 @@ func TestNamedTagListRepository(t *testing.T) {
 			},
 		)
 
-		got = NewNamedTagListRepository(connection).FindAll()
+		got, _ = NewNamedTagListRepository(connection).FindAll()
 		want = []NamedTagList{
 			{
 				Name: "tag list name",
@@ -54,7 +54,7 @@ func TestNamedTagListRepository(t *testing.T) {
 
 		NewNamedTagListRepository(connection).DeleteAll()
 
-		got = NewNamedTagListRepository(connection).FindAll()
+		got, _ = NewNamedTagListRepository(connection).FindAll()
 		want = []NamedTagList{}
 
 		if !reflect.DeepEqual(got, want) {

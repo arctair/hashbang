@@ -18,16 +18,11 @@ type stubNamedTagListRepository struct {
 	willError         bool
 }
 
-func (r *stubNamedTagListRepository) FindAll() []NamedTagList {
-	return []NamedTagList{
-		{
-			Name: "tag list name",
-			Tags: []string{
-				"#windy",
-				"#tdd",
-			},
-		},
+func (r *stubNamedTagListRepository) FindAll() ([]NamedTagList, error) {
+	if r.willError {
+		return nil, errors.New("there was an error")
 	}
+	return []NamedTagList{r.dummyNamedTagList}, nil
 }
 
 func (r *stubNamedTagListRepository) Create(namedTagList NamedTagList) error {
@@ -84,6 +79,25 @@ func TestNamedTagListController(t *testing.T) {
 
 		if !reflect.DeepEqual(gotNamedTagLists, wantNamedTagLists) {
 			t.Errorf("got named tag lists %q want %q", gotNamedTagLists, wantNamedTagLists)
+		}
+	})
+
+	t.Run("GET when repository has error", func(t *testing.T) {
+		controller := NewNamedTagListController(
+			&stubNamedTagListRepository{
+				willError: true,
+			},
+		)
+
+		request, _ := http.NewRequest(http.MethodGet, "/", nil)
+		response := httptest.NewRecorder()
+		controller.GetNamedTagLists().ServeHTTP(response, request)
+
+		gotStatusCode := response.Result().StatusCode
+		wantStatusCode := 500
+
+		if gotStatusCode != wantStatusCode {
+			t.Errorf("got status code %d want %d", gotStatusCode, wantStatusCode)
 		}
 	})
 
