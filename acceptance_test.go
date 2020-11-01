@@ -115,7 +115,7 @@ func TestAcceptance(t *testing.T) {
 		assertutil.NotError(t, err)
 
 		sha1Pattern := regexp.MustCompile("^[0-9a-f]{40}(-dirty)?$")
-		versionPattern := regexp.MustCompile("^\\d+\\.\\d+\\.\\d+$")
+		versionPattern := regexp.MustCompile("^v\\d+\\.\\d+\\.\\d+$")
 
 		if !sha1Pattern.MatchString(build.Sha1) {
 			t.Errorf("got sha1 %s want 40 hex digits", build.Sha1)
