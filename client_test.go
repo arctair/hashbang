@@ -10,8 +10,8 @@ import (
 )
 
 type NamedTagList struct {
-	ImageUri string
-	Tags     []string
+	Name string
+	Tags []string
 }
 
 type Build struct {

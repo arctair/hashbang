@@ -28,6 +28,7 @@ func Migrate(connection *pgx.Conn) error {
 		"create table if not exists posts (\"imageUri\" text, \"tags\" text[])",
 		"create table named_tag_lists (\"imageUri\" text, \"tags\" text[])",
 		"drop table posts",
+		"create table named_tag_lists_2 (\"name\" text, \"tags\" text[])",
 	}
 
 	for index, migration := range migrations {

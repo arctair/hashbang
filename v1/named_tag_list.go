@@ -2,6 +2,6 @@ package v1
 
 // NamedTagList ...
 type NamedTagList struct {
-	ImageUri string   `json:"imageUri"`
-	Tags     []string `json:"tags"`
+	Name string   `json:"name"`
+	Tags []string `json:"tags"`
 }

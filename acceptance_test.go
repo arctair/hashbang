@@ -65,7 +65,7 @@ func TestAcceptance(t *testing.T) {
 		if err = createNamedTagList(
 			baseUrl,
 			NamedTagList{
-				ImageUri: "https://images.unsplash.com/photo-1603316851229-26637b4bd1b8?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1400&q=80",
+				Name: "named tag list",
 				Tags: []string{
 					"#windy",
 					"#tdd",
@@ -81,7 +81,7 @@ func TestAcceptance(t *testing.T) {
 
 		wantNamedTagLists = []NamedTagList{
 			{
-				ImageUri: "https://images.unsplash.com/photo-1603316851229-26637b4bd1b8?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1400&q=80",
+				Name: "named tag list",
 				Tags: []string{
 					"#windy",
 					"#tdd",
