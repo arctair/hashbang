@@ -29,8 +29,12 @@ func (r *stubNamedTagListRepository) FindAll() []NamedTagList {
 	}
 }
 
-func (r *stubNamedTagListRepository) Create(namedTagList NamedTagList) {
+func (r *stubNamedTagListRepository) Create(namedTagList NamedTagList) error {
 	r.created = namedTagList
+	if r.willError {
+		return errors.New("there was an error")
+	}
+	return nil
 }
 
 func (r *stubNamedTagListRepository) DeleteAll() error {
@@ -108,6 +112,30 @@ func TestNamedTagListController(t *testing.T) {
 		wantCreated := dummyNamedTagList
 		if !reflect.DeepEqual(gotCreated, wantCreated) {
 			t.Errorf("got created %q want %q", gotCreated, wantCreated)
+		}
+	})
+
+	t.Run("POST when repository has error", func(t *testing.T) {
+		controller := NewNamedTagListController(
+			&stubNamedTagListRepository{
+				willError: true,
+			},
+		)
+
+		requestBody, err := json.Marshal(dummyNamedTagList)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		request, _ := http.NewRequest(http.MethodPost, "/", bytes.NewBuffer(requestBody))
+		response := httptest.NewRecorder()
+		controller.CreateNamedTagList().ServeHTTP(response, request)
+
+		gotStatusCode := response.Result().StatusCode
+		wantStatusCode := 500
+
+		if gotStatusCode != wantStatusCode {
+			t.Errorf("got status code %d want %d", gotStatusCode, wantStatusCode)
 		}
 	})
 

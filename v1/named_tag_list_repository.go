@@ -9,7 +9,7 @@ import (
 // NamedTagListRepository ...
 type NamedTagListRepository interface {
 	FindAll() []NamedTagList
-	Create(namedTagList NamedTagList)
+	Create(namedTagList NamedTagList) error
 	DeleteAll() error
 }
 
@@ -34,11 +34,9 @@ func (r *namedTagListRepository) FindAll() []NamedTagList {
 	return namedTagLists
 }
 
-func (r *namedTagListRepository) Create(namedTagList NamedTagList) {
+func (r *namedTagListRepository) Create(namedTagList NamedTagList) error {
 	_, err := r.connection.Exec(context.Background(), "insert into named_tag_lists (\"name\", \"tags\") values ($1, $2)", namedTagList.Name, namedTagList.Tags)
-	if err != nil {
-		panic(err)
-	}
+	return err
 }
 
 func (r *namedTagListRepository) DeleteAll() error {
