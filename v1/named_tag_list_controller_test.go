@@ -17,7 +17,7 @@ type stubNamedTagListRepository struct {
 func (r *stubNamedTagListRepository) FindAll() []NamedTagList {
 	return []NamedTagList{
 		{
-			Name: "https://images.unsplash.com/photo-1603316851229-26637b4bd1b8?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1400&q=80",
+			Name: "tag list name",
 			Tags: []string{
 				"#windy",
 				"#tdd",
@@ -58,7 +58,7 @@ func TestNamedTagListController(t *testing.T) {
 
 		wantNamedTagLists := []NamedTagList{
 			{
-				Name: "https://images.unsplash.com/photo-1603316851229-26637b4bd1b8?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1400&q=80",
+				Name: "tag list name",
 				Tags: []string{
 					"#windy",
 					"#tdd",
@@ -78,7 +78,7 @@ func TestNamedTagListController(t *testing.T) {
 		)
 
 		namedTagList := NamedTagList{
-			Name: "https://images.unsplash.com/photo-1603316851229-26637b4bd1b8?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1400&q=80",
+			Name: "tag list name",
 			Tags: []string{
 				"#windy",
 				"#tdd",
@@ -102,7 +102,7 @@ func TestNamedTagListController(t *testing.T) {
 
 		gotCreated := repository.created
 		wantCreated := NamedTagList{
-			Name: "https://images.unsplash.com/photo-1603316851229-26637b4bd1b8?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1400&q=80",
+			Name: "tag list name",
 			Tags: []string{
 				"#windy",
 				"#tdd",
