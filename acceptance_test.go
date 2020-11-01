@@ -33,10 +33,13 @@ func TestAcceptance(t *testing.T) {
 
 		command := exec.Command("bin/hashbang")
 		command.Env = append(command.Env, fmt.Sprintf("DATABASE_URL=%s", testServer.PGURL().String()))
+		stdout, err := command.StdoutPipe()
+		assertutil.NotError(t, err)
 		stderr, err := command.StderrPipe()
 		assertutil.NotError(t, err)
 		assertutil.NotError(t, command.Start())
-		defer dumpPipe("app:", stderr)
+		defer dumpPipe("appout", stdout)
+		defer dumpPipe("apperr", stderr)
 		defer command.Process.Kill()
 
 		assertutil.NotError(
