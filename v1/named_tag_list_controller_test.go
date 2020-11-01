@@ -10,8 +10,9 @@ import (
 )
 
 type stubNamedTagListRepository struct {
-	created    NamedTagList
-	deletedAll bool
+	dummyNamedTagList NamedTagList
+	created           NamedTagList
+	deletedAll        bool
 }
 
 func (r *stubNamedTagListRepository) FindAll() []NamedTagList {
@@ -35,9 +36,19 @@ func (r *stubNamedTagListRepository) DeleteAll() {
 }
 
 func TestNamedTagListController(t *testing.T) {
+	dummyNamedTagList := NamedTagList{
+		Name: "tag list name",
+		Tags: []string{
+			"#windy",
+			"#tdd",
+		},
+	}
+
 	t.Run("GET", func(t *testing.T) {
 		controller := NewNamedTagListController(
-			&stubNamedTagListRepository{},
+			&stubNamedTagListRepository{
+				dummyNamedTagList: dummyNamedTagList,
+			},
 		)
 
 		request, _ := http.NewRequest(http.MethodGet, "/", nil)
@@ -57,13 +68,7 @@ func TestNamedTagListController(t *testing.T) {
 		}
 
 		wantNamedTagLists := []NamedTagList{
-			{
-				Name: "tag list name",
-				Tags: []string{
-					"#windy",
-					"#tdd",
-				},
-			},
+			dummyNamedTagList,
 		}
 
 		if !reflect.DeepEqual(gotNamedTagLists, wantNamedTagLists) {
@@ -77,14 +82,7 @@ func TestNamedTagListController(t *testing.T) {
 			repository,
 		)
 
-		namedTagList := NamedTagList{
-			Name: "tag list name",
-			Tags: []string{
-				"#windy",
-				"#tdd",
-			},
-		}
-		requestBody, err := json.Marshal(namedTagList)
+		requestBody, err := json.Marshal(dummyNamedTagList)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -101,14 +99,7 @@ func TestNamedTagListController(t *testing.T) {
 		}
 
 		gotCreated := repository.created
-		wantCreated := NamedTagList{
-			Name: "tag list name",
-			Tags: []string{
-				"#windy",
-				"#tdd",
-			},
-		}
-
+		wantCreated := dummyNamedTagList
 		if !reflect.DeepEqual(gotCreated, wantCreated) {
 			t.Errorf("got created %q want %q", gotCreated, wantCreated)
 		}
