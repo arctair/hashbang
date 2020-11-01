@@ -14,13 +14,7 @@ type NamedTagListController interface {
 
 type namedTagListController struct {
 	namedTagListRepository NamedTagListRepository
-}
-
-// NewNamedTagListController ...
-func NewNamedTagListController(namedTagListRepository NamedTagListRepository) NamedTagListController {
-	return &namedTagListController{
-		namedTagListRepository,
-	}
+	namedTagListService    NamedTagListService
 }
 
 func (c *namedTagListController) GetNamedTagLists() http.Handler {
@@ -46,13 +40,17 @@ func (c *namedTagListController) CreateNamedTagList() http.Handler {
 	return http.HandlerFunc(
 		func(rw http.ResponseWriter, r *http.Request) {
 			defer r.Body.Close()
-			var namedTagList NamedTagList
+			var (
+				namedTagList *NamedTagList
+				err          error
+			)
 			if json.NewDecoder(r.Body).Decode(&namedTagList) != nil {
-				rw.WriteHeader(400)
-			} else if c.namedTagListRepository.Create(namedTagList) != nil {
-				rw.WriteHeader(500)
+				rw.WriteHeader(http.StatusBadRequest)
+			} else if namedTagList, err = c.namedTagListService.Create(*namedTagList); err != nil {
+				rw.WriteHeader(http.StatusInternalServerError)
 			} else {
-				rw.WriteHeader(201)
+				rw.WriteHeader(http.StatusCreated)
+				json.NewEncoder(rw).Encode(namedTagList)
 			}
 		},
 	)
@@ -69,4 +67,15 @@ func (c *namedTagListController) DeleteNamedTagLists() http.Handler {
 			}
 		},
 	)
+}
+
+// NewNamedTagListController ...
+func NewNamedTagListController(
+	namedTagListRepository NamedTagListRepository,
+	namedTagListService NamedTagListService,
+) NamedTagListController {
+	return &namedTagListController{
+		namedTagListRepository,
+		namedTagListService,
+	}
 }

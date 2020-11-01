@@ -11,30 +11,37 @@ import (
 	"testing"
 )
 
-type stubNamedTagListRepository struct {
+type stubNamedTagListRepositoryForController struct {
+	NamedTagListRepository
+
 	dummyNamedTagList NamedTagList
 	willError         bool
 }
 
-func (r *stubNamedTagListRepository) FindAll() ([]NamedTagList, error) {
+func (r *stubNamedTagListRepositoryForController) FindAll() ([]NamedTagList, error) {
 	if r.willError {
 		return nil, errors.New("there was an error")
 	}
 	return []NamedTagList{r.dummyNamedTagList}, nil
 }
 
-func (r *stubNamedTagListRepository) Create(namedTagList NamedTagList) error {
-	if r.willError && reflect.DeepEqual(namedTagList, r.dummyNamedTagList) {
+func (r *stubNamedTagListRepositoryForController) DeleteAll() error {
+	if r.willError {
 		return errors.New("there was an error")
 	}
 	return nil
 }
 
-func (r *stubNamedTagListRepository) DeleteAll() error {
-	if r.willError {
-		return errors.New("there was an error")
+type stubNamedTagListService struct {
+	dummyNamedTagList NamedTagList
+	willError         bool
+}
+
+func (r *stubNamedTagListService) Create(namedTagList NamedTagList) (*NamedTagList, error) {
+	if r.willError && reflect.DeepEqual(namedTagList, r.dummyNamedTagList) {
+		return nil, errors.New("there was an error")
 	}
-	return nil
+	return &r.dummyNamedTagList, nil
 }
 
 func TestNamedTagListController(t *testing.T) {
@@ -48,9 +55,10 @@ func TestNamedTagListController(t *testing.T) {
 
 	t.Run("GET", func(t *testing.T) {
 		controller := NewNamedTagListController(
-			&stubNamedTagListRepository{
+			&stubNamedTagListRepositoryForController{
 				dummyNamedTagList: dummyNamedTagList,
 			},
+			&stubNamedTagListService{},
 		)
 
 		request, _ := http.NewRequest(http.MethodGet, "/", nil)
@@ -80,9 +88,10 @@ func TestNamedTagListController(t *testing.T) {
 
 	t.Run("GET when repository has error", func(t *testing.T) {
 		controller := NewNamedTagListController(
-			&stubNamedTagListRepository{
+			&stubNamedTagListRepositoryForController{
 				willError: true,
 			},
+			&stubNamedTagListService{},
 		)
 
 		request, _ := http.NewRequest(http.MethodGet, "/", nil)
@@ -98,9 +107,11 @@ func TestNamedTagListController(t *testing.T) {
 	})
 
 	t.Run("POST", func(t *testing.T) {
-		repository := &stubNamedTagListRepository{}
 		controller := NewNamedTagListController(
-			repository,
+			&stubNamedTagListRepositoryForController{},
+			&stubNamedTagListService{
+				dummyNamedTagList: dummyNamedTagList,
+			},
 		)
 
 		requestBody, err := json.Marshal(dummyNamedTagList)
@@ -118,11 +129,23 @@ func TestNamedTagListController(t *testing.T) {
 		if gotStatusCode != wantStatusCode {
 			t.Errorf("got status code %d want %d", gotStatusCode, wantStatusCode)
 		}
+
+		var gotNamedTagList NamedTagList
+		if err := json.NewDecoder(response.Body).Decode(&gotNamedTagList); err != nil {
+			t.Fatal(err)
+		}
+
+		wantNamedTagList := dummyNamedTagList
+
+		if !reflect.DeepEqual(gotNamedTagList, wantNamedTagList) {
+			t.Errorf("got named tag list %+v want %+v", gotNamedTagList, wantNamedTagList)
+		}
 	})
 
 	t.Run("POST when request body malformed", func(t *testing.T) {
 		controller := NewNamedTagListController(
-			&stubNamedTagListRepository{},
+			&stubNamedTagListRepositoryForController{},
+			&stubNamedTagListService{},
 		)
 
 		request, _ := http.NewRequest(http.MethodPost, "/", strings.NewReader("{\"garbalooy\":\"gook"))
@@ -139,7 +162,8 @@ func TestNamedTagListController(t *testing.T) {
 
 	t.Run("POST when repository has error", func(t *testing.T) {
 		controller := NewNamedTagListController(
-			&stubNamedTagListRepository{
+			&stubNamedTagListRepositoryForController{},
+			&stubNamedTagListService{
 				dummyNamedTagList: dummyNamedTagList,
 				willError:         true,
 			},
@@ -163,9 +187,10 @@ func TestNamedTagListController(t *testing.T) {
 	})
 
 	t.Run("DELETE", func(t *testing.T) {
-		repository := &stubNamedTagListRepository{}
+		repository := &stubNamedTagListRepositoryForController{}
 		controller := NewNamedTagListController(
 			repository,
+			&stubNamedTagListService{},
 		)
 
 		request, _ := http.NewRequest(http.MethodDelete, "/namedTagLists", nil)
@@ -182,9 +207,10 @@ func TestNamedTagListController(t *testing.T) {
 
 	t.Run("DELETE when repository has error", func(t *testing.T) {
 		controller := NewNamedTagListController(
-			&stubNamedTagListRepository{
+			&stubNamedTagListRepositoryForController{
 				willError: true,
 			},
+			&stubNamedTagListService{},
 		)
 
 		request, _ := http.NewRequest(http.MethodDelete, "/namedTagLists", nil)

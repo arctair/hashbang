@@ -27,12 +27,17 @@ func StartHTTPServer(wg *sync.WaitGroup) *http.Server {
 		panic(err)
 	}
 
+	namedTagListRepository := v1.NewNamedTagListRepository(
+		connection,
+	)
+
 	server := &http.Server{
 		Addr: ":5000",
 		Handler: v1.NewRouter(
 			v1.NewNamedTagListController(
-				v1.NewNamedTagListRepository(
-					connection,
+				namedTagListRepository,
+				v1.NewNamedTagListService(
+					namedTagListRepository,
 				),
 			),
 			v1.NewVersionController(
