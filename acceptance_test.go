@@ -54,60 +54,61 @@ func TestAcceptance(t *testing.T) {
 		)
 	}
 
-	t.Run("life of a named tag list", func(t *testing.T) {
-		// get named tag lists is empty
-		gotNamedTagLists, err := getNamedTagLists(baseUrl)
-		assertutil.NotError(t, err)
-		wantNamedTagLists := []NamedTagList{}
+	t.Run("named tag list life cycle", func(t *testing.T) {
+		t.Run("get named tag lists is empty", func(t *testing.T) {
+			gotNamedTagLists, err := getNamedTagLists(baseUrl)
+			assertutil.NotError(t, err)
+			wantNamedTagLists := []NamedTagList{}
 
-		if !reflect.DeepEqual(gotNamedTagLists, wantNamedTagLists) {
-			t.Errorf("got named tag lists %+v want %+v", gotNamedTagLists, wantNamedTagLists)
-		}
+			if !reflect.DeepEqual(gotNamedTagLists, wantNamedTagLists) {
+				t.Errorf("got named tag lists %+v want %+v", gotNamedTagLists, wantNamedTagLists)
+			}
+		})
 
-		// create named tag list
-		if err = createNamedTagList(
-			baseUrl,
-			NamedTagList{
-				Name: "named tag list",
-				Tags: []string{
-					"#windy",
-					"#tdd",
+		t.Run("create named tag list", func(t *testing.T) {
+			if err := createNamedTagList(
+				baseUrl,
+				NamedTagList{
+					Name: "named tag list",
+					Tags: []string{
+						"#windy",
+						"#tdd",
+					},
 				},
-			},
-		); err != nil {
-			t.Fatal(err)
-		}
+			); err != nil {
+				t.Fatal(err)
+			}
 
-		// get named tag lists is not empty
-		gotNamedTagLists, err = getNamedTagLists(baseUrl)
-		assertutil.NotError(t, err)
+			gotNamedTagLists, err := getNamedTagLists(baseUrl)
+			assertutil.NotError(t, err)
 
-		wantNamedTagLists = []NamedTagList{
-			{
-				Name: "named tag list",
-				Tags: []string{
-					"#windy",
-					"#tdd",
+			wantNamedTagLists := []NamedTagList{
+				{
+					Name: "named tag list",
+					Tags: []string{
+						"#windy",
+						"#tdd",
+					},
 				},
-			},
-		}
+			}
 
-		if !reflect.DeepEqual(gotNamedTagLists, wantNamedTagLists) {
-			t.Errorf("got named tag lists %+v want %+v", gotNamedTagLists, wantNamedTagLists)
-		}
+			if !reflect.DeepEqual(gotNamedTagLists, wantNamedTagLists) {
+				t.Errorf("got named tag lists %+v want %+v", gotNamedTagLists, wantNamedTagLists)
+			}
+		})
 
-		// delete named tag lists
-		err = deleteNamedTagLists(baseUrl)
-		assertutil.NotError(t, err)
+		t.Run("delete all named tag lists", func(t *testing.T) {
+			err := deleteNamedTagLists(baseUrl)
+			assertutil.NotError(t, err)
 
-		// get named tag lists is empty
-		gotNamedTagLists, err = getNamedTagLists(baseUrl)
-		assertutil.NotError(t, err)
-		wantNamedTagLists = []NamedTagList{}
+			gotNamedTagLists, err := getNamedTagLists(baseUrl)
+			assertutil.NotError(t, err)
+			wantNamedTagLists := []NamedTagList{}
 
-		if !reflect.DeepEqual(gotNamedTagLists, wantNamedTagLists) {
-			t.Errorf("got named tag lists %+v want %+v", gotNamedTagLists, wantNamedTagLists)
-		}
+			if !reflect.DeepEqual(gotNamedTagLists, wantNamedTagLists) {
+				t.Errorf("got named tag lists %+v want %+v", gotNamedTagLists, wantNamedTagLists)
+			}
+		})
 	})
 
 	t.Run("GET /version returns sha1 and version", func(t *testing.T) {
