@@ -7,6 +7,11 @@ import (
 	"github.com/jackc/pgx/v4"
 )
 
+// Migration ...
+type Migration struct {
+	Sql string
+}
+
 // Migrate ...
 func Migrate(connection *pgx.Conn) error {
 	var err error
@@ -24,19 +29,19 @@ func Migrate(connection *pgx.Conn) error {
 	var schemaVersion int
 	err = row.Scan(&schemaVersion)
 
-	migrations := []string{
-		"create table if not exists posts (\"imageUri\" text, \"tags\" text[])",
-		"create table named_tag_lists (\"imageUri\" text, \"tags\" text[])",
-		"drop table posts",
-		"create table named_tag_lists_2 (\"name\" text, \"tags\" text[])",
+	migrations := []Migration{
+		{Sql: "create table if not exists posts (\"imageUri\" text, \"tags\" text[])"},
+		{Sql: "create table named_tag_lists (\"imageUri\" text, \"tags\" text[])"},
+		{Sql: "drop table posts"},
+		{Sql: "create table named_tag_lists_2 (\"name\" text, \"tags\" text[])"},
 	}
 
 	for index, migration := range migrations {
 		if index < schemaVersion {
-			fmt.Printf("Skipping migration %d: %s\n", index, migration)
+			fmt.Printf("Skipping migration %d: %s\n", index, migration.Sql)
 		} else {
-			fmt.Printf("Running migration %d: %s\n", index, migration)
-			_, err = connection.Exec(context.Background(), migration)
+			fmt.Printf("Running migration %d: %s\n", index, migration.Sql)
+			_, err = connection.Exec(context.Background(), migration.Sql)
 			if err != nil {
 				return fmt.Errorf("Failed to migrate %d: %s", index, err)
 			}
