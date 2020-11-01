@@ -3,6 +3,7 @@ package v1
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
@@ -13,6 +14,7 @@ type stubNamedTagListRepository struct {
 	dummyNamedTagList NamedTagList
 	created           NamedTagList
 	deletedAll        bool
+	willError         bool
 }
 
 func (r *stubNamedTagListRepository) FindAll() []NamedTagList {
@@ -31,8 +33,12 @@ func (r *stubNamedTagListRepository) Create(namedTagList NamedTagList) {
 	r.created = namedTagList
 }
 
-func (r *stubNamedTagListRepository) DeleteAll() {
+func (r *stubNamedTagListRepository) DeleteAll() error {
 	r.deletedAll = true
+	if r.willError {
+		return errors.New("there was an error")
+	}
+	return nil
 }
 
 func TestNamedTagListController(t *testing.T) {
@@ -126,6 +132,25 @@ func TestNamedTagListController(t *testing.T) {
 
 		if !gotDeletedAll {
 			t.Errorf("got deleted all false wanted true")
+		}
+	})
+
+	t.Run("DELETE when repository has error", func(t *testing.T) {
+		controller := NewNamedTagListController(
+			&stubNamedTagListRepository{
+				willError: true,
+			},
+		)
+
+		request, _ := http.NewRequest(http.MethodDelete, "/namedTagLists", nil)
+		response := httptest.NewRecorder()
+		controller.DeleteNamedTagLists().ServeHTTP(response, request)
+
+		gotStatusCode := response.Result().StatusCode
+		wantStatusCode := 500
+
+		if gotStatusCode != wantStatusCode {
+			t.Errorf("got status code %d want %d", gotStatusCode, wantStatusCode)
 		}
 	})
 }

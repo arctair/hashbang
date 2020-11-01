@@ -10,7 +10,7 @@ import (
 type NamedTagListRepository interface {
 	FindAll() []NamedTagList
 	Create(namedTagList NamedTagList)
-	DeleteAll()
+	DeleteAll() error
 }
 
 type namedTagListRepository struct {
@@ -41,11 +41,9 @@ func (r *namedTagListRepository) Create(namedTagList NamedTagList) {
 	}
 }
 
-func (r *namedTagListRepository) DeleteAll() {
+func (r *namedTagListRepository) DeleteAll() error {
 	_, err := r.connection.Exec(context.Background(), "delete from named_tag_lists")
-	if err != nil {
-		panic(err)
-	}
+	return err
 }
 
 // NewNamedTagListRepository ...

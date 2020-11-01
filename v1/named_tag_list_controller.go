@@ -54,8 +54,12 @@ func (c *namedTagListController) CreateNamedTagList() http.Handler {
 func (c *namedTagListController) DeleteNamedTagLists() http.Handler {
 	return http.HandlerFunc(
 		func(rw http.ResponseWriter, r *http.Request) {
-			c.namedTagListRepository.DeleteAll()
-			rw.WriteHeader(204)
+			err := c.namedTagListRepository.DeleteAll()
+			if err != nil {
+				rw.WriteHeader(500)
+			} else {
+				rw.WriteHeader(204)
+			}
 		},
 	)
 }
