@@ -1,0 +1,3 @@
+until [ `scripts/versionByDepth` == `scripts/deployedVersion` ] ; do
+  sleep 1
+done
