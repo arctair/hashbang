@@ -1,4 +1,6 @@
 #!/bin/sh
+docker build -t arctair/hashbang:`scripts/versionByDepth` .
+docker push arctair/hashbang:`scripts/versionByDepth`
 cat <<EOF | kubectl apply -f -
 apiVersion: apps/v1
 kind: Deployment
@@ -37,3 +39,8 @@ spec:
   selector:
     app: hashbang
 EOF
+echo waiting for deployment `scripts/deployedVersion`
+until [ `scripts/versionByDepth` == `scripts/deployedVersion` ] ; do
+  sleep 1
+done
+BASE_URL=https://hashbang.arctair.com go test -tags acceptance

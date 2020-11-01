@@ -1,3 +1,0 @@
-#!/bin/sh
-docker build -t arctair/hashbang:`scripts/versionByDepth` .
-docker push arctair/hashbang:`scripts/versionByDepth`
