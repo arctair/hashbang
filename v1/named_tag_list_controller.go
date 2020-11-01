@@ -42,10 +42,9 @@ func (c *namedTagListController) CreateNamedTagList() http.Handler {
 		func(rw http.ResponseWriter, r *http.Request) {
 			defer r.Body.Close()
 			var namedTagList NamedTagList
-			if err := json.NewDecoder(r.Body).Decode(&namedTagList); err != nil {
-				panic(err)
-			}
-			if c.namedTagListRepository.Create(namedTagList) != nil {
+			if json.NewDecoder(r.Body).Decode(&namedTagList) != nil {
+				rw.WriteHeader(400)
+			} else if c.namedTagListRepository.Create(namedTagList) != nil {
 				rw.WriteHeader(500)
 			} else {
 				rw.WriteHeader(201)

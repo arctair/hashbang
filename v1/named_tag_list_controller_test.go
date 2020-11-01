@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -112,6 +113,23 @@ func TestNamedTagListController(t *testing.T) {
 		wantCreated := dummyNamedTagList
 		if !reflect.DeepEqual(gotCreated, wantCreated) {
 			t.Errorf("got created %q want %q", gotCreated, wantCreated)
+		}
+	})
+
+	t.Run("POST when request body malformed", func(t *testing.T) {
+		controller := NewNamedTagListController(
+			&stubNamedTagListRepository{},
+		)
+
+		request, _ := http.NewRequest(http.MethodPost, "/", strings.NewReader("{\"garbalooy\":\"gook"))
+		response := httptest.NewRecorder()
+		controller.CreateNamedTagList().ServeHTTP(response, request)
+
+		gotStatusCode := response.Result().StatusCode
+		wantStatusCode := 400
+
+		if gotStatusCode != wantStatusCode {
+			t.Errorf("got status code %d want %d", gotStatusCode, wantStatusCode)
 		}
 	})
 
