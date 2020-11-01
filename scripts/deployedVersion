@@ -1,1 +1,1 @@
-curl -sL hashbang.arctair.com/version | jq '.version' -r
+curl -sL hashbang.arctair.com/version | jq '.version' -r || echo unknown
