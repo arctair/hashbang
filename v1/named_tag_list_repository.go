@@ -18,7 +18,7 @@ type namedTagListRepository struct {
 }
 
 func (r *namedTagListRepository) FindAll() []NamedTagList {
-	rows, err := r.connection.Query(context.Background(), "select \"name\", \"tags\" from named_tag_lists_2")
+	rows, err := r.connection.Query(context.Background(), "select \"name\", \"tags\" from named_tag_lists")
 	if err != nil {
 		panic(err)
 	}
@@ -35,14 +35,14 @@ func (r *namedTagListRepository) FindAll() []NamedTagList {
 }
 
 func (r *namedTagListRepository) Create(namedTagList NamedTagList) {
-	_, err := r.connection.Exec(context.Background(), "insert into named_tag_lists_2 (\"name\", \"tags\") values ($1, $2)", namedTagList.Name, namedTagList.Tags)
+	_, err := r.connection.Exec(context.Background(), "insert into named_tag_lists (\"name\", \"tags\") values ($1, $2)", namedTagList.Name, namedTagList.Tags)
 	if err != nil {
 		panic(err)
 	}
 }
 
 func (r *namedTagListRepository) DeleteAll() {
-	_, err := r.connection.Exec(context.Background(), "delete from named_tag_lists_2")
+	_, err := r.connection.Exec(context.Background(), "delete from named_tag_lists")
 	if err != nil {
 		panic(err)
 	}

@@ -35,6 +35,8 @@ func Migrate(connection *pgx.Conn) error {
 		{Index: 1, Sql: "create table named_tag_lists (\"imageUri\" text, \"tags\" text[])"},
 		{Index: 2, Sql: "drop table posts"},
 		{Index: 3, Sql: "create table named_tag_lists_2 (\"name\" text, \"tags\" text[])"},
+		{Index: 4, Sql: "drop table named_tag_lists"},
+		{Index: 5, Sql: "create table named_tag_lists (\"name\" text, \"tags\" text[])"},
 	}
 
 	for _, migration := range migrations {
