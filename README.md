@@ -18,7 +18,7 @@ $ BASE_URL=https://hashbang.arctair.com go test -tags acceptance
 $ go run .
 $ curl localhost:5000
 ```
-## Build and deploy
+## Build, deploy, and verify
 ```
-$ scripts/dockerBuildPush && scripts/deploy
+$ scripts/deploy
 ```
