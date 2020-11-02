@@ -47,7 +47,11 @@ func Migrate(connection *pgx.Conn) error {
 		}
 	}
 
-	_, err = connection.Exec(context.Background(), "update metadata set \"value\" = $1 where \"name\" = 'schemaVersion'", len(migrations))
+	_, err = connection.Exec(
+		context.Background(),
+		"update metadata set \"value\" = $1 where \"name\" = 'schemaVersion'",
+		migrations[len(migrations)-1].Index,
+	)
 	if err != nil {
 		return err
 	}
