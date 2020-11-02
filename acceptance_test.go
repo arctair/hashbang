@@ -100,6 +100,7 @@ func TestAcceptance(t *testing.T) {
 
 			wantNamedTagLists := []NamedTagList{
 				{
+					Id:   gotNamedTagList.Id,
 					Name: "named tag list",
 					Tags: []string{
 						"#windy",

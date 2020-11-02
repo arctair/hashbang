@@ -32,6 +32,7 @@ func Migrate(connection *pgx.Conn) error {
 
 	migrations := []Migration{
 		{Index: 5, Sql: "create table named_tag_lists (\"name\" text, \"tags\" text[])"},
+		{Index: 6, Sql: "alter table named_tag_lists add column id uuid primary key"},
 	}
 
 	for _, migration := range migrations {

@@ -27,19 +27,25 @@ func TestNamedTagListRepository(t *testing.T) {
 			t.Errorf("got %+v want %+v", got, want)
 		}
 
-		NewNamedTagListRepository(connection).Create(
+		if err := NewNamedTagListRepository(connection).Create(
 			NamedTagList{
+				ID:   "7fe6ca35-d868-48a9-94d4-6e7f7db450ea",
 				Name: "tag list name",
 				Tags: []string{
 					"#windy",
 					"#tdd",
 				},
 			},
-		)
+		); err != nil {
+			t.Fatal(err)
+		}
 
-		got, _ = NewNamedTagListRepository(connection).FindAll()
+		if got, err = NewNamedTagListRepository(connection).FindAll(); err != nil {
+			t.Fatal(err)
+		}
 		want = []NamedTagList{
 			{
+				ID:   "7fe6ca35-d868-48a9-94d4-6e7f7db450ea",
 				Name: "tag list name",
 				Tags: []string{
 					"#windy",
@@ -52,7 +58,9 @@ func TestNamedTagListRepository(t *testing.T) {
 			t.Errorf("got %+v want %+v", got, want)
 		}
 
-		NewNamedTagListRepository(connection).DeleteAll()
+		if err := NewNamedTagListRepository(connection).DeleteAll(); err != nil {
+			t.Fatal(err)
+		}
 
 		got, _ = NewNamedTagListRepository(connection).FindAll()
 		want = []NamedTagList{}

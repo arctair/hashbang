@@ -23,7 +23,7 @@ func (r *namedTagListRepository) FindAll() ([]NamedTagList, error) {
 		err  error
 	)
 
-	if rows, err = r.connection.Query(context.Background(), "select \"name\", \"tags\" from named_tag_lists"); err != nil {
+	if rows, err = r.connection.Query(context.Background(), "select \"id\", \"name\", \"tags\" from named_tag_lists"); err != nil {
 		return nil, err
 	}
 
@@ -31,7 +31,7 @@ func (r *namedTagListRepository) FindAll() ([]NamedTagList, error) {
 
 	var namedTagList NamedTagList
 	for rows.Next() {
-		if err = rows.Scan(&namedTagList.Name, &namedTagList.Tags); err != nil {
+		if err = rows.Scan(&namedTagList.ID, &namedTagList.Name, &namedTagList.Tags); err != nil {
 			return nil, err
 		}
 		namedTagLists = append(namedTagLists, namedTagList)
@@ -41,7 +41,13 @@ func (r *namedTagListRepository) FindAll() ([]NamedTagList, error) {
 }
 
 func (r *namedTagListRepository) Create(namedTagList NamedTagList) error {
-	_, err := r.connection.Exec(context.Background(), "insert into named_tag_lists (\"name\", \"tags\") values ($1, $2)", namedTagList.Name, namedTagList.Tags)
+	_, err := r.connection.Exec(
+		context.Background(),
+		"insert into named_tag_lists (\"id\", \"name\", \"tags\") values ($1, $2, $3)",
+		namedTagList.ID,
+		namedTagList.Name,
+		namedTagList.Tags,
+	)
 	return err
 }
 
