@@ -19,14 +19,16 @@ func TestNamedTagListRepository(t *testing.T) {
 	assertutil.NotError(t, err)
 	assertutil.NotError(t, Migrate(connection))
 
-	t.Run("create, get, delete named tag list", func(t *testing.T) {
+	t.Run("get empty named tag lists", func(t *testing.T) {
 		got, _ := NewNamedTagListRepository(connection).FindAll()
 		want := []NamedTagList{}
 
 		if !reflect.DeepEqual(got, want) {
 			t.Errorf("got %+v want %+v", got, want)
 		}
+	})
 
+	t.Run("create named tag list", func(t *testing.T) {
 		if err := NewNamedTagListRepository(connection).Create(
 			NamedTagList{
 				ID:   "7fe6ca35-d868-48a9-94d4-6e7f7db450ea",
@@ -40,10 +42,11 @@ func TestNamedTagListRepository(t *testing.T) {
 			t.Fatal(err)
 		}
 
+		var got []NamedTagList
 		if got, err = NewNamedTagListRepository(connection).FindAll(); err != nil {
 			t.Fatal(err)
 		}
-		want = []NamedTagList{
+		want := []NamedTagList{
 			{
 				ID:   "7fe6ca35-d868-48a9-94d4-6e7f7db450ea",
 				Name: "tag list name",
@@ -57,13 +60,15 @@ func TestNamedTagListRepository(t *testing.T) {
 		if !reflect.DeepEqual(got, want) {
 			t.Errorf("got %+v want %+v", got, want)
 		}
+	})
 
+	t.Run("delete all named tag lists", func(t *testing.T) {
 		if err := NewNamedTagListRepository(connection).DeleteAll(); err != nil {
 			t.Fatal(err)
 		}
 
-		got, _ = NewNamedTagListRepository(connection).FindAll()
-		want = []NamedTagList{}
+		got, _ := NewNamedTagListRepository(connection).FindAll()
+		want := []NamedTagList{}
 
 		if !reflect.DeepEqual(got, want) {
 			t.Errorf("got %+v want %+v", got, want)
