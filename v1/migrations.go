@@ -36,7 +36,7 @@ func Migrate(connection *pgx.Conn) error {
 	}
 
 	for _, migration := range migrations {
-		if migration.Index < schemaVersion {
+		if migration.Index <= schemaVersion {
 			fmt.Printf("Skipping migration %d: %s\n", migration.Index, migration.Sql)
 		} else {
 			fmt.Printf("Running migration %d: %s\n", migration.Index, migration.Sql)
