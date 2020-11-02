@@ -66,7 +66,7 @@ func TestAcceptance(t *testing.T) {
 		})
 
 		t.Run("create named tag list", func(t *testing.T) {
-			if err := createNamedTagList(
+			gotNamedTagList, err := createNamedTagList(
 				baseUrl,
 				NamedTagList{
 					Name: "named tag list",
@@ -75,8 +75,24 @@ func TestAcceptance(t *testing.T) {
 						"#tdd",
 					},
 				},
-			); err != nil {
-				t.Fatal(err)
+			)
+			assertutil.NotError(t, err)
+
+			wantIdPattern := regexp.MustCompile("^[0-9a-f-]{36}$")
+			wantName := "named tag list"
+			wantTags := []string{
+				"#windy",
+				"#tdd",
+			}
+
+			if !wantIdPattern.MatchString(gotNamedTagList.Id) {
+				t.Errorf("got id %s want pattern /[0-9a-f-]{36}/", gotNamedTagList.Id)
+			}
+			if gotNamedTagList.Name != wantName {
+				t.Errorf("got name %s want %s", gotNamedTagList.Name, wantName)
+			}
+			if !reflect.DeepEqual(gotNamedTagList.Tags, wantTags) {
+				t.Errorf("got tags %v want %v", gotNamedTagList.Tags, wantTags)
 			}
 
 			gotNamedTagLists, err := getNamedTagLists(baseUrl)

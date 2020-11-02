@@ -38,6 +38,7 @@ func StartHTTPServer(wg *sync.WaitGroup) *http.Server {
 				namedTagListRepository,
 				v1.NewNamedTagListService(
 					namedTagListRepository,
+					v1.NewUUIDGenerator(),
 				),
 			),
 			v1.NewVersionController(

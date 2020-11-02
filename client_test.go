@@ -10,6 +10,7 @@ import (
 )
 
 type NamedTagList struct {
+	Id   string
 	Name string
 	Tags []string
 }
@@ -42,7 +43,7 @@ func getNamedTagLists(baseUrl string) ([]NamedTagList, error) {
 	return namedTagLists, err
 }
 
-func createNamedTagList(baseUrl string, namedTagList NamedTagList) error {
+func createNamedTagList(baseUrl string, namedTagList NamedTagList) (*NamedTagList, error) {
 	var (
 		err         error
 		requestBody []byte
@@ -50,7 +51,7 @@ func createNamedTagList(baseUrl string, namedTagList NamedTagList) error {
 	)
 
 	if requestBody, err = json.Marshal(namedTagList); err != nil {
-		return err
+		return nil, err
 	}
 
 	if response, err = http.Post(
@@ -58,16 +59,19 @@ func createNamedTagList(baseUrl string, namedTagList NamedTagList) error {
 		"application/json",
 		bytes.NewBuffer(requestBody),
 	); err != nil {
-		return err
+		return nil, err
 	}
 
 	gotStatusCode := response.StatusCode
 	wantStatusCode := 201
 
 	if gotStatusCode != wantStatusCode {
-		return fmt.Errorf("got status code %d want %d", gotStatusCode, wantStatusCode)
+		return nil, fmt.Errorf("got status code %d want %d", gotStatusCode, wantStatusCode)
 	}
-	return nil
+
+	defer response.Body.Close()
+	err = json.NewDecoder(response.Body).Decode(&namedTagList)
+	return &namedTagList, err
 }
 
 func deleteNamedTagLists(baseUrl string) error {
