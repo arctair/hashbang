@@ -74,6 +74,34 @@ func createNamedTagList(baseUrl string, namedTagList NamedTagList) (*NamedTagLis
 	return &namedTagList, err
 }
 
+func deleteNamedTagList(baseUrl string, id string) error {
+	var (
+		err      error
+		request  *http.Request
+		response *http.Response
+	)
+
+	if request, err = http.NewRequest(
+		http.MethodDelete,
+		fmt.Sprintf("%s/namedTagLists?id=%s", baseUrl, id),
+		nil,
+	); err != nil {
+		return err
+	}
+
+	if response, err = http.DefaultClient.Do(request); err != nil {
+		return err
+	}
+
+	gotStatusCode := response.StatusCode
+	wantStatusCode := 204
+
+	if gotStatusCode != wantStatusCode {
+		return fmt.Errorf("got status code %d want %d", gotStatusCode, wantStatusCode)
+	}
+	return nil
+}
+
 func deleteNamedTagLists(baseUrl string) error {
 	var (
 		err      error

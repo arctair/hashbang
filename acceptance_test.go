@@ -114,6 +114,34 @@ func TestAcceptance(t *testing.T) {
 			}
 		})
 
+		t.Run("delete named tag list by id", func(t *testing.T) {
+			gotNamedTagList, err := createNamedTagList(
+				baseUrl,
+				NamedTagList{
+					Name: "named tag list",
+					Tags: []string{
+						"#windy",
+						"#tdd",
+					},
+				},
+			)
+			assertutil.NotError(t, err)
+
+			err = deleteNamedTagList(baseUrl, gotNamedTagList.Id)
+			assertutil.NotError(t, err)
+
+			gotNamedTagLists, err := getNamedTagLists(baseUrl)
+			assertutil.NotError(t, err)
+
+			if len(gotNamedTagLists) != 1 {
+				t.Errorf("got count %d want %d", len(gotNamedTagLists), 1)
+			}
+
+			if reflect.DeepEqual(gotNamedTagLists, []NamedTagList{*gotNamedTagList}) {
+				t.Errorf("got named tag lists %+v want %+v to be deleted", gotNamedTagLists, gotNamedTagList)
+			}
+		})
+
 		t.Run("delete all named tag lists", func(t *testing.T) {
 			err := deleteNamedTagLists(baseUrl)
 			assertutil.NotError(t, err)
