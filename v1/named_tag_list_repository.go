@@ -11,6 +11,7 @@ type NamedTagListRepository interface {
 	FindAll() ([]NamedTagList, error)
 	Create(namedTagList NamedTagList) error
 	DeleteAll() error
+	DeleteByIds(ids []string) error
 }
 
 type namedTagListRepository struct {
@@ -53,6 +54,15 @@ func (r *namedTagListRepository) Create(namedTagList NamedTagList) error {
 
 func (r *namedTagListRepository) DeleteAll() error {
 	_, err := r.connection.Exec(context.Background(), "delete from named_tag_lists")
+	return err
+}
+
+func (r *namedTagListRepository) DeleteByIds(ids []string) error {
+	_, err := r.connection.Exec(
+		context.Background(),
+		"delete from named_tag_lists where \"id\" = ANY($1)",
+		ids,
+	)
 	return err
 }
 

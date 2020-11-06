@@ -15,18 +15,25 @@ type stubNamedTagListRepositoryForController struct {
 	NamedTagListRepository
 
 	dummyNamedTagList NamedTagList
-	willError         bool
+	willError         string
 }
 
 func (r *stubNamedTagListRepositoryForController) FindAll() ([]NamedTagList, error) {
-	if r.willError {
+	if r.willError == "FindAll" {
 		return nil, errors.New("there was an error")
 	}
 	return []NamedTagList{r.dummyNamedTagList}, nil
 }
 
+func (r *stubNamedTagListRepositoryForController) DeleteByIds(ids []string) error {
+	if r.willError == "DeleteByIds" {
+		return errors.New("there was an error")
+	}
+	return nil
+}
+
 func (r *stubNamedTagListRepositoryForController) DeleteAll() error {
-	if r.willError {
+	if r.willError == "DeleteAll" {
 		return errors.New("there was an error")
 	}
 	return nil
@@ -34,11 +41,11 @@ func (r *stubNamedTagListRepositoryForController) DeleteAll() error {
 
 type stubNamedTagListService struct {
 	dummyNamedTagList NamedTagList
-	willError         bool
+	willError         string
 }
 
 func (r *stubNamedTagListService) Create(namedTagList NamedTagList) (*NamedTagList, error) {
-	if r.willError && reflect.DeepEqual(namedTagList, r.dummyNamedTagList) {
+	if r.willError == "Create" && reflect.DeepEqual(namedTagList, r.dummyNamedTagList) {
 		return nil, errors.New("there was an error")
 	}
 	return &r.dummyNamedTagList, nil
@@ -89,7 +96,7 @@ func TestNamedTagListController(t *testing.T) {
 	t.Run("GET when repository has error", func(t *testing.T) {
 		controller := NewNamedTagListController(
 			&stubNamedTagListRepositoryForController{
-				willError: true,
+				willError: "FindAll",
 			},
 			&stubNamedTagListService{},
 		)
@@ -165,7 +172,7 @@ func TestNamedTagListController(t *testing.T) {
 			&stubNamedTagListRepositoryForController{},
 			&stubNamedTagListService{
 				dummyNamedTagList: dummyNamedTagList,
-				willError:         true,
+				willError:         "Create",
 			},
 		)
 
@@ -186,7 +193,45 @@ func TestNamedTagListController(t *testing.T) {
 		}
 	})
 
-	t.Run("DELETE", func(t *testing.T) {
+	t.Run("DELETE by ids", func(t *testing.T) {
+		controller := NewNamedTagListController(
+			&stubNamedTagListRepositoryForController{},
+			&stubNamedTagListService{},
+		)
+
+		request, _ := http.NewRequest(http.MethodDelete, "/namedTagLists?id=0b491dfc-3969-4ae3-83dd-83fae3b0f56e", nil)
+		response := httptest.NewRecorder()
+		controller.DeleteNamedTagLists().ServeHTTP(response, request)
+
+		gotStatusCode := response.Result().StatusCode
+		wantStatusCode := 204
+
+		if gotStatusCode != wantStatusCode {
+			t.Errorf("got status code %d want %d", gotStatusCode, wantStatusCode)
+		}
+	})
+
+	t.Run("DELETE by ids when repository has error", func(t *testing.T) {
+		controller := NewNamedTagListController(
+			&stubNamedTagListRepositoryForController{
+				willError: "DeleteByIds",
+			},
+			&stubNamedTagListService{},
+		)
+
+		request, _ := http.NewRequest(http.MethodDelete, "/namedTagLists?id=0b491dfc-3969-4ae3-83dd-83fae3b0f56e", nil)
+		response := httptest.NewRecorder()
+		controller.DeleteNamedTagLists().ServeHTTP(response, request)
+
+		gotStatusCode := response.Result().StatusCode
+		wantStatusCode := 500
+
+		if gotStatusCode != wantStatusCode {
+			t.Errorf("got status code %d want %d", gotStatusCode, wantStatusCode)
+		}
+	})
+
+	t.Run("DELETE all", func(t *testing.T) {
 		repository := &stubNamedTagListRepositoryForController{}
 		controller := NewNamedTagListController(
 			repository,
@@ -205,10 +250,10 @@ func TestNamedTagListController(t *testing.T) {
 		}
 	})
 
-	t.Run("DELETE when repository has error", func(t *testing.T) {
+	t.Run("DELETE all when repository has error", func(t *testing.T) {
 		controller := NewNamedTagListController(
 			&stubNamedTagListRepositoryForController{
-				willError: true,
+				willError: "DeleteAll",
 			},
 			&stubNamedTagListService{},
 		)
