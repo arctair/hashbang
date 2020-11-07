@@ -39,7 +39,7 @@ spec:
   selector:
     app: hashbang
 EOF
-echo waiting for deployment `scripts/versionByDepth` (currently `scripts/deployedVersion`)
+echo waiting for deployment `scripts/versionByDepth` \(currently `scripts/deployedVersion`\)
 until [ `scripts/versionByDepth` == `scripts/deployedVersion` ] ; do
   sleep 1
 done
