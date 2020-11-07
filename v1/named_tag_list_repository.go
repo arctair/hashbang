@@ -10,11 +10,14 @@ import (
 type NamedTagListRepository interface {
 	FindAll() ([]NamedTagList, error)
 	Create(namedTagList NamedTagList) error
+	ReplaceByIds(ids []string, ntl NamedTagList) error
 	DeleteAll() error
 	DeleteByIds(ids []string) error
 }
 
 type namedTagListRepository struct {
+	NamedTagListRepository
+
 	connection *pgx.Conn
 }
 
@@ -48,6 +51,17 @@ func (r *namedTagListRepository) Create(namedTagList NamedTagList) error {
 		namedTagList.ID,
 		namedTagList.Name,
 		namedTagList.Tags,
+	)
+	return err
+}
+
+func (r *namedTagListRepository) ReplaceByIds(ids []string, ntl NamedTagList) error {
+	_, err := r.connection.Exec(
+		context.Background(),
+		"update named_tag_lists set \"name\" = $1, \"tags\" = $2 where \"id\" = ANY($3)",
+		ntl.Name,
+		ntl.Tags,
+		ids,
 	)
 	return err
 }

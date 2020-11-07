@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
@@ -14,15 +15,30 @@ import (
 type stubNamedTagListRepositoryForController struct {
 	NamedTagListRepository
 
-	dummyNamedTagList NamedTagList
-	willError         string
+	withIds          []string
+	withNamedTagList NamedTagList
+	willError        string
+
+	err error
 }
 
 func (r *stubNamedTagListRepositoryForController) FindAll() ([]NamedTagList, error) {
 	if r.willError == "FindAll" {
 		return nil, errors.New("there was an error")
 	}
-	return []NamedTagList{r.dummyNamedTagList}, nil
+	return []NamedTagList{r.withNamedTagList}, nil
+}
+
+func (r *stubNamedTagListRepositoryForController) ReplaceByIds(ids []string, ntl NamedTagList) error {
+	requestMatched := reflect.DeepEqual(ids, r.withIds) && reflect.DeepEqual(ntl, r.withNamedTagList)
+	willError := (r.willError == "ReplaceByIds")
+	if !requestMatched {
+		r.err = fmt.Errorf("Stub got ids %v want %v got ntl %+v want %+v", ids, r.withIds, ntl, r.withNamedTagList)
+	}
+	if requestMatched == willError {
+		return fmt.Errorf("there was an error")
+	}
+	return nil
 }
 
 func (r *stubNamedTagListRepositoryForController) DeleteByIds(ids []string) error {
@@ -63,7 +79,7 @@ func TestNamedTagListController(t *testing.T) {
 	t.Run("GET", func(t *testing.T) {
 		controller := NewNamedTagListController(
 			&stubNamedTagListRepositoryForController{
-				dummyNamedTagList: dummyNamedTagList,
+				withNamedTagList: dummyNamedTagList,
 			},
 			&stubNamedTagListService{},
 		)
@@ -190,6 +206,95 @@ func TestNamedTagListController(t *testing.T) {
 
 		if gotStatusCode != wantStatusCode {
 			t.Errorf("got status code %d want %d", gotStatusCode, wantStatusCode)
+		}
+	})
+
+	t.Run("PUT", func(t *testing.T) {
+		stubRepository := &stubNamedTagListRepositoryForController{
+			withIds:          []string{"deadbeef-dead-beef-dead-beefdeadbeef"},
+			withNamedTagList: dummyNamedTagList,
+		}
+		controller := NewNamedTagListController(
+			stubRepository,
+			&stubNamedTagListService{},
+		)
+
+		requestBody, err := json.Marshal(dummyNamedTagList)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		request, _ := http.NewRequest(
+			http.MethodPut,
+			"/?id=deadbeef-dead-beef-dead-beefdeadbeef",
+			bytes.NewBuffer(requestBody),
+		)
+		response := httptest.NewRecorder()
+		controller.ReplaceNamedTagLists().ServeHTTP(response, request)
+
+		gotStatusCode := response.Result().StatusCode
+		wantStatusCode := 204
+
+		if gotStatusCode != wantStatusCode {
+			t.Errorf("got status code %d want %d", gotStatusCode, wantStatusCode)
+		}
+
+		if stubRepository.err != nil {
+			t.Error(stubRepository.err)
+		}
+	})
+
+	t.Run("PUT when request body malformed", func(t *testing.T) {
+		controller := NewNamedTagListController(
+			&stubNamedTagListRepositoryForController{},
+			&stubNamedTagListService{},
+		)
+
+		request, _ := http.NewRequest(http.MethodPut, "/", strings.NewReader("{\"garbalooy\":\"gook"))
+		response := httptest.NewRecorder()
+		controller.ReplaceNamedTagLists().ServeHTTP(response, request)
+
+		gotStatusCode := response.Result().StatusCode
+		wantStatusCode := 400
+
+		if gotStatusCode != wantStatusCode {
+			t.Errorf("got status code %d want %d", gotStatusCode, wantStatusCode)
+		}
+	})
+
+	t.Run("PUT when repository has error", func(t *testing.T) {
+		stubRepository := &stubNamedTagListRepositoryForController{
+			withIds:          []string{"deadbeef-dead-beef-dead-beefdeadbeef"},
+			withNamedTagList: dummyNamedTagList,
+			willError:        "ReplaceByIds",
+		}
+		controller := NewNamedTagListController(
+			stubRepository,
+			&stubNamedTagListService{},
+		)
+
+		requestBody, err := json.Marshal(dummyNamedTagList)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		request, _ := http.NewRequest(
+			http.MethodPut,
+			"/?id=deadbeef-dead-beef-dead-beefdeadbeef",
+			bytes.NewBuffer(requestBody),
+		)
+		response := httptest.NewRecorder()
+		controller.ReplaceNamedTagLists().ServeHTTP(response, request)
+
+		gotStatusCode := response.Result().StatusCode
+		wantStatusCode := 500
+
+		if gotStatusCode != wantStatusCode {
+			t.Errorf("got status code %d want %d", gotStatusCode, wantStatusCode)
+		}
+
+		if stubRepository.err != nil {
+			t.Error(stubRepository.err)
 		}
 	})
 

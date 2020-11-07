@@ -68,7 +68,7 @@ func TestNamedTagListRepository(t *testing.T) {
 					"#tdd",
 				},
 			},
-			NamedTagList{
+			{
 				ID:   "a5a5acbf-1541-4fd8-bf9a-343b75b8550f",
 				Name: "tag list name",
 				Tags: []string{
@@ -90,7 +90,7 @@ func TestNamedTagListRepository(t *testing.T) {
 
 		got, _ := NewNamedTagListRepository(connection).FindAll()
 		want := []NamedTagList{
-			NamedTagList{
+			{
 				ID:   "a5a5acbf-1541-4fd8-bf9a-343b75b8550f",
 				Name: "tag list name",
 				Tags: []string{
@@ -115,6 +115,74 @@ func TestNamedTagListRepository(t *testing.T) {
 
 		if !reflect.DeepEqual(got, want) {
 			t.Errorf("got %+v want %+v", got, want)
+		}
+	})
+
+	t.Run("replace named tag list by id", func(t *testing.T) {
+		if err := NewNamedTagListRepository(connection).Create(
+			NamedTagList{
+				ID:   "beefdead-d868-48a9-94d4-6e7f7db450ea",
+				Name: "tag list name",
+				Tags: []string{
+					"#windy",
+					"#tdd",
+				},
+			},
+		); err != nil {
+			t.Fatal(err)
+		}
+
+		if err := NewNamedTagListRepository(connection).Create(
+			NamedTagList{
+				ID:   "deadbeef-d868-48a9-94d4-6e7f7db450ea",
+				Name: "tag list name",
+				Tags: []string{
+					"#windy",
+					"#tdd",
+				},
+			},
+		); err != nil {
+			t.Fatal(err)
+		}
+
+		if err := NewNamedTagListRepository(connection).ReplaceByIds(
+			[]string{"beefdead-d868-48a9-94d4-6e7f7db450ea"},
+			NamedTagList{
+				ID:   "do not update",
+				Name: "replaced",
+				Tags: []string{
+					"#replaced",
+				},
+			},
+		); err != nil {
+			t.Fatal(err)
+		}
+
+		got, _ := NewNamedTagListRepository(connection).FindAll()
+		want := []NamedTagList{
+			{
+				ID:   "beefdead-d868-48a9-94d4-6e7f7db450ea",
+				Name: "replaced",
+				Tags: []string{
+					"#replaced",
+				},
+			},
+			{
+				ID:   "deadbeef-d868-48a9-94d4-6e7f7db450ea",
+				Name: "tag list name",
+				Tags: []string{
+					"#windy",
+					"#tdd",
+				},
+			},
+		}
+
+		if !reflect.DeepEqual(got, want) {
+			t.Errorf("got %+v want %+v", got, want)
+		}
+
+		if err := NewNamedTagListRepository(connection).DeleteAll(); err != nil {
+			t.Fatal(err)
 		}
 	})
 }

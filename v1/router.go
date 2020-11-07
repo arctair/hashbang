@@ -29,6 +29,8 @@ func (router *Router) ServeHTTP(w http.ResponseWriter, request *http.Request) {
 		serveMux.Handle("/version", router.versionController.HandlerFunc())
 	case http.MethodPost:
 		serveMux.Handle("/namedTagLists", router.namedTagListController.CreateNamedTagList())
+	case http.MethodPut:
+		serveMux.Handle("/namedTagLists", router.namedTagListController.ReplaceNamedTagLists())
 	case http.MethodDelete:
 		serveMux.Handle("/namedTagLists", router.namedTagListController.DeleteNamedTagLists())
 	}

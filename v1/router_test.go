@@ -25,6 +25,14 @@ func (c *stubNamedTagListController) CreateNamedTagList() http.Handler {
 	)
 }
 
+func (c *stubNamedTagListController) ReplaceNamedTagLists() http.Handler {
+	return http.HandlerFunc(
+		func(w http.ResponseWriter, r *http.Request) {
+			w.Write([]byte("the named tag list controller body / put method"))
+		},
+	)
+}
+
 func (c *stubNamedTagListController) DeleteNamedTagLists() http.Handler {
 	return http.HandlerFunc(
 		func(w http.ResponseWriter, r *http.Request) {
@@ -107,6 +115,27 @@ func TestRouter(t *testing.T) {
 
 		gotBody := string(response.Body.Bytes())
 		wantBody := "the named tag list controller body / post method"
+
+		if gotBody != wantBody {
+			t.Errorf("got body %s want %s", gotBody, wantBody)
+		}
+	})
+
+	t.Run("Route PUT /namedTagLists to named tag list controller", func(t *testing.T) {
+		request, _ := http.NewRequest(http.MethodPut, "/namedTagLists", nil)
+		response := httptest.NewRecorder()
+
+		router.ServeHTTP(response, request)
+
+		gotStatusCode := response.Result().StatusCode
+		wantStatusCode := 200
+
+		if gotStatusCode != wantStatusCode {
+			t.Errorf("got status code %d want %d", gotStatusCode, wantStatusCode)
+		}
+
+		gotBody := string(response.Body.Bytes())
+		wantBody := "the named tag list controller body / put method"
 
 		if gotBody != wantBody {
 			t.Errorf("got body %s want %s", gotBody, wantBody)

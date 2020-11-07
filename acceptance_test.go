@@ -154,6 +154,55 @@ func TestAcceptance(t *testing.T) {
 				t.Errorf("got named tag lists %+v want %+v", gotNamedTagLists, wantNamedTagLists)
 			}
 		})
+
+		t.Run("replace named tag list by id", func(t *testing.T) {
+			gotNamedTagList, err := createNamedTagList(
+				baseUrl,
+				NamedTagList{
+					Name: "named tag list",
+					Tags: []string{
+						"#windy",
+						"#tdd",
+					},
+				},
+			)
+			assertutil.NotError(t, err)
+
+			err = replaceNamedTagList(
+				baseUrl,
+				gotNamedTagList.Id,
+				NamedTagList{
+					Id:   "deadbeef",
+					Name: "replaced",
+					Tags: []string{
+						"#tdd",
+						"#windy",
+					},
+				},
+			)
+			assertutil.NotError(t, err)
+
+			gotNamedTagLists, err := getNamedTagLists(baseUrl)
+			assertutil.NotError(t, err)
+
+			wantNamedTagLists := []NamedTagList{
+				{
+					Id:   gotNamedTagList.Id,
+					Name: "replaced",
+					Tags: []string{
+						"#tdd",
+						"#windy",
+					},
+				},
+			}
+
+			if !reflect.DeepEqual(gotNamedTagLists, wantNamedTagLists) {
+				t.Errorf("got named tag lists %+v want %+v", gotNamedTagLists, wantNamedTagLists)
+			}
+
+			err = deleteNamedTagLists(baseUrl)
+			assertutil.NotError(t, err)
+		})
 	})
 
 	t.Run("GET /version returns sha1 and version", func(t *testing.T) {

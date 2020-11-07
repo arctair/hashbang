@@ -9,6 +9,7 @@ import (
 type NamedTagListController interface {
 	GetNamedTagLists() http.Handler
 	CreateNamedTagList() http.Handler
+	ReplaceNamedTagLists() http.Handler
 	DeleteNamedTagLists() http.Handler
 }
 
@@ -51,6 +52,22 @@ func (c *namedTagListController) CreateNamedTagList() http.Handler {
 			} else {
 				rw.WriteHeader(http.StatusCreated)
 				json.NewEncoder(rw).Encode(namedTagList)
+			}
+		},
+	)
+}
+
+func (c *namedTagListController) ReplaceNamedTagLists() http.Handler {
+	return http.HandlerFunc(
+		func(rw http.ResponseWriter, r *http.Request) {
+			defer r.Body.Close()
+			var namedTagList *NamedTagList
+			if json.NewDecoder(r.Body).Decode(&namedTagList) != nil {
+				rw.WriteHeader(http.StatusBadRequest)
+			} else if c.namedTagListRepository.ReplaceByIds(r.URL.Query()["id"], *namedTagList) != nil {
+				rw.WriteHeader(500)
+			} else {
+				rw.WriteHeader(204)
 			}
 		},
 	)
