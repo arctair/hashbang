@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/jackc/pgx/v4"
+	"github.com/jackc/pgx/v4/pgxpool"
 )
 
 // NamedTagListRepository ...
@@ -16,9 +17,7 @@ type NamedTagListRepository interface {
 }
 
 type namedTagListRepository struct {
-	NamedTagListRepository
-
-	connection *pgx.Conn
+	pool *pgxpool.Pool
 }
 
 func (r *namedTagListRepository) FindAll() ([]NamedTagList, error) {
@@ -27,7 +26,7 @@ func (r *namedTagListRepository) FindAll() ([]NamedTagList, error) {
 		err  error
 	)
 
-	if rows, err = r.connection.Query(context.Background(), "select \"id\", \"name\", \"tags\" from named_tag_lists"); err != nil {
+	if rows, err = r.pool.Query(context.Background(), "select \"id\", \"name\", \"tags\" from named_tag_lists"); err != nil {
 		return nil, err
 	}
 
@@ -45,7 +44,7 @@ func (r *namedTagListRepository) FindAll() ([]NamedTagList, error) {
 }
 
 func (r *namedTagListRepository) Create(namedTagList NamedTagList) error {
-	_, err := r.connection.Exec(
+	_, err := r.pool.Exec(
 		context.Background(),
 		"insert into named_tag_lists (\"id\", \"name\", \"tags\") values ($1, $2, $3)",
 		namedTagList.ID,
@@ -56,7 +55,7 @@ func (r *namedTagListRepository) Create(namedTagList NamedTagList) error {
 }
 
 func (r *namedTagListRepository) ReplaceByIds(ids []string, ntl NamedTagList) error {
-	_, err := r.connection.Exec(
+	_, err := r.pool.Exec(
 		context.Background(),
 		"update named_tag_lists set \"name\" = $1, \"tags\" = $2 where \"id\" = ANY($3)",
 		ntl.Name,
@@ -67,12 +66,12 @@ func (r *namedTagListRepository) ReplaceByIds(ids []string, ntl NamedTagList) er
 }
 
 func (r *namedTagListRepository) DeleteAll() error {
-	_, err := r.connection.Exec(context.Background(), "delete from named_tag_lists")
+	_, err := r.pool.Exec(context.Background(), "delete from named_tag_lists")
 	return err
 }
 
 func (r *namedTagListRepository) DeleteByIds(ids []string) error {
-	_, err := r.connection.Exec(
+	_, err := r.pool.Exec(
 		context.Background(),
 		"delete from named_tag_lists where \"id\" = ANY($1)",
 		ids,
@@ -81,8 +80,8 @@ func (r *namedTagListRepository) DeleteByIds(ids []string) error {
 }
 
 // NewNamedTagListRepository ...
-func NewNamedTagListRepository(connection *pgx.Conn) NamedTagListRepository {
+func NewNamedTagListRepository(pool *pgxpool.Pool) NamedTagListRepository {
 	return &namedTagListRepository{
-		connection: connection,
+		pool: pool,
 	}
 }

@@ -7,7 +7,7 @@ import (
 
 	"github.com/arctair/go-assertutil"
 	"github.com/cockroachdb/cockroach-go/v2/testserver"
-	"github.com/jackc/pgx/v4"
+	"github.com/jackc/pgx/v4/pgxpool"
 )
 
 func TestNamedTagListRepository(t *testing.T) {
@@ -15,12 +15,12 @@ func TestNamedTagListRepository(t *testing.T) {
 	defer testServer.Stop()
 	assertutil.NotError(t, err)
 
-	connection, err := pgx.Connect(context.Background(), testServer.PGURL().String())
+	pool, err := pgxpool.Connect(context.Background(), testServer.PGURL().String())
 	assertutil.NotError(t, err)
-	assertutil.NotError(t, Migrate(connection))
+	assertutil.NotError(t, Migrate(pool))
 
 	t.Run("get empty named tag lists", func(t *testing.T) {
-		got, _ := NewNamedTagListRepository(connection).FindAll()
+		got, _ := NewNamedTagListRepository(pool).FindAll()
 		want := []NamedTagList{}
 
 		if !reflect.DeepEqual(got, want) {
@@ -29,7 +29,7 @@ func TestNamedTagListRepository(t *testing.T) {
 	})
 
 	t.Run("create named tag list", func(t *testing.T) {
-		if err := NewNamedTagListRepository(connection).Create(
+		if err := NewNamedTagListRepository(pool).Create(
 			NamedTagList{
 				ID:   "7fe6ca35-d868-48a9-94d4-6e7f7db450ea",
 				Name: "tag list name",
@@ -42,7 +42,7 @@ func TestNamedTagListRepository(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		if err := NewNamedTagListRepository(connection).Create(
+		if err := NewNamedTagListRepository(pool).Create(
 			NamedTagList{
 				ID:   "a5a5acbf-1541-4fd8-bf9a-343b75b8550f",
 				Name: "tag list name",
@@ -56,7 +56,7 @@ func TestNamedTagListRepository(t *testing.T) {
 		}
 
 		var got []NamedTagList
-		if got, err = NewNamedTagListRepository(connection).FindAll(); err != nil {
+		if got, err = NewNamedTagListRepository(pool).FindAll(); err != nil {
 			t.Fatal(err)
 		}
 		want := []NamedTagList{
@@ -84,11 +84,11 @@ func TestNamedTagListRepository(t *testing.T) {
 	})
 
 	t.Run("delete named tag list by id", func(t *testing.T) {
-		if err := NewNamedTagListRepository(connection).DeleteByIds([]string{"7fe6ca35-d868-48a9-94d4-6e7f7db450ea"}); err != nil {
+		if err := NewNamedTagListRepository(pool).DeleteByIds([]string{"7fe6ca35-d868-48a9-94d4-6e7f7db450ea"}); err != nil {
 			t.Fatal(err)
 		}
 
-		got, _ := NewNamedTagListRepository(connection).FindAll()
+		got, _ := NewNamedTagListRepository(pool).FindAll()
 		want := []NamedTagList{
 			{
 				ID:   "a5a5acbf-1541-4fd8-bf9a-343b75b8550f",
@@ -106,11 +106,11 @@ func TestNamedTagListRepository(t *testing.T) {
 	})
 
 	t.Run("delete all named tag lists", func(t *testing.T) {
-		if err := NewNamedTagListRepository(connection).DeleteAll(); err != nil {
+		if err := NewNamedTagListRepository(pool).DeleteAll(); err != nil {
 			t.Fatal(err)
 		}
 
-		got, _ := NewNamedTagListRepository(connection).FindAll()
+		got, _ := NewNamedTagListRepository(pool).FindAll()
 		want := []NamedTagList{}
 
 		if !reflect.DeepEqual(got, want) {
@@ -119,7 +119,7 @@ func TestNamedTagListRepository(t *testing.T) {
 	})
 
 	t.Run("replace named tag list by id", func(t *testing.T) {
-		if err := NewNamedTagListRepository(connection).Create(
+		if err := NewNamedTagListRepository(pool).Create(
 			NamedTagList{
 				ID:   "beefdead-d868-48a9-94d4-6e7f7db450ea",
 				Name: "tag list name",
@@ -132,7 +132,7 @@ func TestNamedTagListRepository(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		if err := NewNamedTagListRepository(connection).Create(
+		if err := NewNamedTagListRepository(pool).Create(
 			NamedTagList{
 				ID:   "deadbeef-d868-48a9-94d4-6e7f7db450ea",
 				Name: "tag list name",
@@ -145,7 +145,7 @@ func TestNamedTagListRepository(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		if err := NewNamedTagListRepository(connection).ReplaceByIds(
+		if err := NewNamedTagListRepository(pool).ReplaceByIds(
 			[]string{"beefdead-d868-48a9-94d4-6e7f7db450ea"},
 			NamedTagList{
 				ID:   "do not update",
@@ -158,7 +158,7 @@ func TestNamedTagListRepository(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		got, _ := NewNamedTagListRepository(connection).FindAll()
+		got, _ := NewNamedTagListRepository(pool).FindAll()
 		want := []NamedTagList{
 			{
 				ID:   "beefdead-d868-48a9-94d4-6e7f7db450ea",
@@ -181,7 +181,7 @@ func TestNamedTagListRepository(t *testing.T) {
 			t.Errorf("got %+v want %+v", got, want)
 		}
 
-		if err := NewNamedTagListRepository(connection).DeleteAll(); err != nil {
+		if err := NewNamedTagListRepository(pool).DeleteAll(); err != nil {
 			t.Fatal(err)
 		}
 	})

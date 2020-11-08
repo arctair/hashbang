@@ -8,7 +8,7 @@ import (
 	"sync"
 
 	v1 "github.com/arctair/hashbang/v1"
-	"github.com/jackc/pgx/v4"
+	"github.com/jackc/pgx/v4/pgxpool"
 )
 
 var (
@@ -18,17 +18,17 @@ var (
 
 // StartHTTPServer ...
 func StartHTTPServer(wg *sync.WaitGroup) *http.Server {
-	connection, err := pgx.Connect(context.Background(), os.Getenv("DATABASE_URL"))
+	pool, err := pgxpool.Connect(context.Background(), os.Getenv("DATABASE_URL"))
 	if err != nil {
 		panic(err)
 	}
 
-	if err = v1.Migrate(connection); err != nil {
+	if err = v1.Migrate(pool); err != nil {
 		panic(err)
 	}
 
 	namedTagListRepository := v1.NewNamedTagListRepository(
-		connection,
+		pool,
 	)
 
 	server := &http.Server{
