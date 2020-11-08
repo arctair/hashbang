@@ -35,6 +35,7 @@ func StartHTTPServer(wg *sync.WaitGroup) *http.Server {
 		Addr: ":5000",
 		Handler: v1.NewRouter(
 			v1.NewNamedTagListController(
+				v1.NewLogger(),
 				namedTagListRepository,
 				v1.NewNamedTagListService(
 					namedTagListRepository,

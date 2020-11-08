@@ -12,6 +12,20 @@ import (
 	"testing"
 )
 
+type stubLogger struct {
+	errors []string
+}
+
+func stubLoggerNew() *stubLogger {
+	return &stubLogger{
+		errors: []string{},
+	}
+}
+
+func (l *stubLogger) Error(err error) {
+	l.errors = append(l.errors, fmt.Sprint(err))
+}
+
 type stubNamedTagListRepositoryForController struct {
 	NamedTagListRepository
 
@@ -78,6 +92,7 @@ func TestNamedTagListController(t *testing.T) {
 
 	t.Run("GET", func(t *testing.T) {
 		controller := NewNamedTagListController(
+			stubLoggerNew(),
 			&stubNamedTagListRepositoryForController{
 				withNamedTagList: dummyNamedTagList,
 			},
@@ -110,7 +125,9 @@ func TestNamedTagListController(t *testing.T) {
 	})
 
 	t.Run("GET when repository has error", func(t *testing.T) {
+		logger := stubLoggerNew()
 		controller := NewNamedTagListController(
+			logger,
 			&stubNamedTagListRepositoryForController{
 				willError: "FindAll",
 			},
@@ -127,10 +144,16 @@ func TestNamedTagListController(t *testing.T) {
 		if gotStatusCode != wantStatusCode {
 			t.Errorf("got status code %d want %d", gotStatusCode, wantStatusCode)
 		}
+		
+		wantErrorf := []string{"there was an error"}
+		if !reflect.DeepEqual(logger.errors, wantErrorf) {
+			t.Errorf("got logger.Errorf %+v want %+v", logger.errors, wantErrorf)
+		}
 	})
 
 	t.Run("POST", func(t *testing.T) {
 		controller := NewNamedTagListController(
+			stubLoggerNew(),
 			&stubNamedTagListRepositoryForController{},
 			&stubNamedTagListService{
 				dummyNamedTagList: dummyNamedTagList,
@@ -167,6 +190,7 @@ func TestNamedTagListController(t *testing.T) {
 
 	t.Run("POST when request body malformed", func(t *testing.T) {
 		controller := NewNamedTagListController(
+			stubLoggerNew(),
 			&stubNamedTagListRepositoryForController{},
 			&stubNamedTagListService{},
 		)
@@ -184,7 +208,9 @@ func TestNamedTagListController(t *testing.T) {
 	})
 
 	t.Run("POST when repository has error", func(t *testing.T) {
+		logger := stubLoggerNew()
 		controller := NewNamedTagListController(
+			logger,
 			&stubNamedTagListRepositoryForController{},
 			&stubNamedTagListService{
 				dummyNamedTagList: dummyNamedTagList,
@@ -207,6 +233,11 @@ func TestNamedTagListController(t *testing.T) {
 		if gotStatusCode != wantStatusCode {
 			t.Errorf("got status code %d want %d", gotStatusCode, wantStatusCode)
 		}
+		
+		wantErrorf := []string{"there was an error"}
+		if !reflect.DeepEqual(logger.errors, wantErrorf) {
+			t.Errorf("got logger.Errorf %+v want %+v", logger.errors, wantErrorf)
+		}
 	})
 
 	t.Run("PUT", func(t *testing.T) {
@@ -215,6 +246,7 @@ func TestNamedTagListController(t *testing.T) {
 			withNamedTagList: dummyNamedTagList,
 		}
 		controller := NewNamedTagListController(
+			stubLoggerNew(),
 			stubRepository,
 			&stubNamedTagListService{},
 		)
@@ -246,6 +278,7 @@ func TestNamedTagListController(t *testing.T) {
 
 	t.Run("PUT when request body malformed", func(t *testing.T) {
 		controller := NewNamedTagListController(
+			stubLoggerNew(),
 			&stubNamedTagListRepositoryForController{},
 			&stubNamedTagListService{},
 		)
@@ -268,7 +301,9 @@ func TestNamedTagListController(t *testing.T) {
 			withNamedTagList: dummyNamedTagList,
 			willError:        "ReplaceByIds",
 		}
+		logger := stubLoggerNew()
 		controller := NewNamedTagListController(
+			logger,
 			stubRepository,
 			&stubNamedTagListService{},
 		)
@@ -296,10 +331,16 @@ func TestNamedTagListController(t *testing.T) {
 		if stubRepository.err != nil {
 			t.Error(stubRepository.err)
 		}
+		
+		wantErrorf := []string{"there was an error"}
+		if !reflect.DeepEqual(logger.errors, wantErrorf) {
+			t.Errorf("got logger.Errorf %+v want %+v", logger.errors, wantErrorf)
+		}
 	})
 
 	t.Run("DELETE by ids", func(t *testing.T) {
 		controller := NewNamedTagListController(
+			stubLoggerNew(),
 			&stubNamedTagListRepositoryForController{},
 			&stubNamedTagListService{},
 		)
@@ -317,7 +358,9 @@ func TestNamedTagListController(t *testing.T) {
 	})
 
 	t.Run("DELETE by ids when repository has error", func(t *testing.T) {
+		logger:= stubLoggerNew()
 		controller := NewNamedTagListController(
+			logger,
 			&stubNamedTagListRepositoryForController{
 				willError: "DeleteByIds",
 			},
@@ -334,11 +377,17 @@ func TestNamedTagListController(t *testing.T) {
 		if gotStatusCode != wantStatusCode {
 			t.Errorf("got status code %d want %d", gotStatusCode, wantStatusCode)
 		}
+		
+		wantErrorf := []string{"there was an error"}
+		if !reflect.DeepEqual(logger.errors, wantErrorf) {
+			t.Errorf("got logger.Errorf %+v want %+v", logger.errors, wantErrorf)
+		}
 	})
 
 	t.Run("DELETE all", func(t *testing.T) {
 		repository := &stubNamedTagListRepositoryForController{}
 		controller := NewNamedTagListController(
+			stubLoggerNew(),
 			repository,
 			&stubNamedTagListService{},
 		)
@@ -356,7 +405,9 @@ func TestNamedTagListController(t *testing.T) {
 	})
 
 	t.Run("DELETE all when repository has error", func(t *testing.T) {
+		logger := stubLoggerNew()
 		controller := NewNamedTagListController(
+			logger,
 			&stubNamedTagListRepositoryForController{
 				willError: "DeleteAll",
 			},
@@ -372,6 +423,11 @@ func TestNamedTagListController(t *testing.T) {
 
 		if gotStatusCode != wantStatusCode {
 			t.Errorf("got status code %d want %d", gotStatusCode, wantStatusCode)
+		}
+		
+		wantErrorf := []string{"there was an error"}
+		if !reflect.DeepEqual(logger.errors, wantErrorf) {
+			t.Errorf("got logger.Errorf %+v want %+v", logger.errors, wantErrorf)
 		}
 	})
 }

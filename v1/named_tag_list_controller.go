@@ -14,6 +14,7 @@ type NamedTagListController interface {
 }
 
 type namedTagListController struct {
+	logger Logger
 	namedTagListRepository NamedTagListRepository
 	namedTagListService    NamedTagListService
 }
@@ -27,6 +28,7 @@ func (c *namedTagListController) GetNamedTagLists() http.Handler {
 			)
 			if namedTagLists, err = c.namedTagListRepository.FindAll(); err != nil {
 				rw.WriteHeader(500)
+				c.logger.Error(err)
 			}
 			bytes, err := json.Marshal(namedTagLists)
 			if err != nil {
@@ -49,6 +51,7 @@ func (c *namedTagListController) CreateNamedTagList() http.Handler {
 				rw.WriteHeader(http.StatusBadRequest)
 			} else if namedTagList, err = c.namedTagListService.Create(*namedTagList); err != nil {
 				rw.WriteHeader(http.StatusInternalServerError)
+				c.logger.Error(err)
 			} else {
 				rw.WriteHeader(http.StatusCreated)
 				json.NewEncoder(rw).Encode(namedTagList)
@@ -64,8 +67,9 @@ func (c *namedTagListController) ReplaceNamedTagLists() http.Handler {
 			var namedTagList *NamedTagList
 			if json.NewDecoder(r.Body).Decode(&namedTagList) != nil {
 				rw.WriteHeader(http.StatusBadRequest)
-			} else if c.namedTagListRepository.ReplaceByIds(r.URL.Query()["id"], *namedTagList) != nil {
+			} else if err := c.namedTagListRepository.ReplaceByIds(r.URL.Query()["id"], *namedTagList) ; err != nil {
 				rw.WriteHeader(500)
+				c.logger.Error(err)
 			} else {
 				rw.WriteHeader(204)
 			}
@@ -85,6 +89,7 @@ func (c *namedTagListController) DeleteNamedTagLists() http.Handler {
 			}
 			if err != nil {
 				rw.WriteHeader(500)
+				c.logger.Error(err)
 			} else {
 				rw.WriteHeader(204)
 			}
@@ -94,10 +99,12 @@ func (c *namedTagListController) DeleteNamedTagLists() http.Handler {
 
 // NewNamedTagListController ...
 func NewNamedTagListController(
+	logger Logger,
 	namedTagListRepository NamedTagListRepository,
 	namedTagListService NamedTagListService,
 ) NamedTagListController {
 	return &namedTagListController{
+		logger,
 		namedTagListRepository,
 		namedTagListService,
 	}
