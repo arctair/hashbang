@@ -43,9 +43,10 @@ func getNamedTagLists(baseUrl string) ([]NamedTagList, error) {
 	return namedTagLists, err
 }
 
-func createNamedTagList(baseUrl string, namedTagList NamedTagList) (*NamedTagList, error) {
+func createNamedTagList(baseUrl string, bucket string, namedTagList NamedTagList) (*NamedTagList, error) {
 	var (
 		err         error
+		url         string
 		requestBody []byte
 		response    *http.Response
 	)
@@ -54,8 +55,14 @@ func createNamedTagList(baseUrl string, namedTagList NamedTagList) (*NamedTagLis
 		return nil, err
 	}
 
+	if len(bucket) > 0 {
+		url = fmt.Sprintf("%s/namedTagLists?bucket=%s", baseUrl, bucket)
+	} else {
+		url = fmt.Sprintf("%s/namedTagLists", baseUrl)
+	}
+
 	if response, err = http.Post(
-		fmt.Sprintf("%s/namedTagLists", baseUrl),
+		url,
 		"application/json",
 		bytes.NewBuffer(requestBody),
 	); err != nil {
@@ -66,7 +73,14 @@ func createNamedTagList(baseUrl string, namedTagList NamedTagList) (*NamedTagLis
 	wantStatusCode := 201
 
 	if gotStatusCode != wantStatusCode {
-		return nil, fmt.Errorf("got status code %d want %d", gotStatusCode, wantStatusCode)
+		var responseBody map[string]string
+		defer response.Body.Close()
+		err = json.NewDecoder(response.Body).Decode(&responseBody)
+		if err != nil {
+			return nil, fmt.Errorf("got status-code=%d want status-code=%d", gotStatusCode, wantStatusCode)
+		} else {
+			return nil, fmt.Errorf("got status-code=%d response-body=%+v want status-code=%d", gotStatusCode, responseBody, wantStatusCode)
+		}
 	}
 
 	defer response.Body.Close()

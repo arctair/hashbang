@@ -144,7 +144,7 @@ func TestNamedTagListController(t *testing.T) {
 		if gotStatusCode != wantStatusCode {
 			t.Errorf("got status code %d want %d", gotStatusCode, wantStatusCode)
 		}
-		
+
 		wantErrorf := []string{"there was an error"}
 		if !reflect.DeepEqual(logger.errors, wantErrorf) {
 			t.Errorf("got logger.Errorf %+v want %+v", logger.errors, wantErrorf)
@@ -165,7 +165,7 @@ func TestNamedTagListController(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		request, _ := http.NewRequest(http.MethodPost, "/", bytes.NewBuffer(requestBody))
+		request, _ := http.NewRequest(http.MethodPost, "/?bucket=bucket", bytes.NewBuffer(requestBody))
 		response := httptest.NewRecorder()
 		controller.CreateNamedTagList().ServeHTTP(response, request)
 
@@ -223,7 +223,7 @@ func TestNamedTagListController(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		request, _ := http.NewRequest(http.MethodPost, "/", bytes.NewBuffer(requestBody))
+		request, _ := http.NewRequest(http.MethodPost, "/?bucket=bucket", bytes.NewBuffer(requestBody))
 		response := httptest.NewRecorder()
 		controller.CreateNamedTagList().ServeHTTP(response, request)
 
@@ -233,10 +233,45 @@ func TestNamedTagListController(t *testing.T) {
 		if gotStatusCode != wantStatusCode {
 			t.Errorf("got status code %d want %d", gotStatusCode, wantStatusCode)
 		}
-		
+
 		wantErrorf := []string{"there was an error"}
 		if !reflect.DeepEqual(logger.errors, wantErrorf) {
 			t.Errorf("got logger.Errorf %+v want %+v", logger.errors, wantErrorf)
+		}
+	})
+
+	t.Run("POST when bucket is empty", func(t *testing.T) {
+		controller := NewNamedTagListController(
+			stubLoggerNew(),
+			&stubNamedTagListRepositoryForController{},
+			&stubNamedTagListService{},
+		)
+
+		requestBody, err := json.Marshal(dummyNamedTagList)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		request, _ := http.NewRequest(http.MethodPost, "/", bytes.NewBuffer(requestBody))
+		response := httptest.NewRecorder()
+		controller.CreateNamedTagList().ServeHTTP(response, request)
+
+		gotStatusCode := response.Result().StatusCode
+		wantStatusCode := 400
+
+		if gotStatusCode != wantStatusCode {
+			t.Errorf("got status code %d want %d", gotStatusCode, wantStatusCode)
+		}
+
+		var gotResponseBody map[string]string
+		if err := json.NewDecoder(response.Body).Decode(&gotResponseBody); err != nil {
+			t.Fatal(err)
+		}
+
+		wantResponseBody := map[string]string{"error": "bucket query parameter is required"}
+
+		if !reflect.DeepEqual(gotResponseBody, wantResponseBody) {
+			t.Errorf("got response body %+v want %+v", gotResponseBody, wantResponseBody)
 		}
 	})
 
@@ -331,7 +366,7 @@ func TestNamedTagListController(t *testing.T) {
 		if stubRepository.err != nil {
 			t.Error(stubRepository.err)
 		}
-		
+
 		wantErrorf := []string{"there was an error"}
 		if !reflect.DeepEqual(logger.errors, wantErrorf) {
 			t.Errorf("got logger.Errorf %+v want %+v", logger.errors, wantErrorf)
@@ -358,7 +393,7 @@ func TestNamedTagListController(t *testing.T) {
 	})
 
 	t.Run("DELETE by ids when repository has error", func(t *testing.T) {
-		logger:= stubLoggerNew()
+		logger := stubLoggerNew()
 		controller := NewNamedTagListController(
 			logger,
 			&stubNamedTagListRepositoryForController{
@@ -377,7 +412,7 @@ func TestNamedTagListController(t *testing.T) {
 		if gotStatusCode != wantStatusCode {
 			t.Errorf("got status code %d want %d", gotStatusCode, wantStatusCode)
 		}
-		
+
 		wantErrorf := []string{"there was an error"}
 		if !reflect.DeepEqual(logger.errors, wantErrorf) {
 			t.Errorf("got logger.Errorf %+v want %+v", logger.errors, wantErrorf)
@@ -424,7 +459,7 @@ func TestNamedTagListController(t *testing.T) {
 		if gotStatusCode != wantStatusCode {
 			t.Errorf("got status code %d want %d", gotStatusCode, wantStatusCode)
 		}
-		
+
 		wantErrorf := []string{"there was an error"}
 		if !reflect.DeepEqual(logger.errors, wantErrorf) {
 			t.Errorf("got logger.Errorf %+v want %+v", logger.errors, wantErrorf)

@@ -68,6 +68,7 @@ func TestAcceptance(t *testing.T) {
 		t.Run("create named tag list", func(t *testing.T) {
 			gotNamedTagList, err := createNamedTagList(
 				baseUrl,
+				"acceptance",
 				NamedTagList{
 					Name: "named tag list",
 					Tags: []string{
@@ -117,6 +118,7 @@ func TestAcceptance(t *testing.T) {
 		t.Run("delete named tag list by id", func(t *testing.T) {
 			gotNamedTagList, err := createNamedTagList(
 				baseUrl,
+				"acceptance",
 				NamedTagList{
 					Name: "named tag list",
 					Tags: []string{
@@ -158,6 +160,7 @@ func TestAcceptance(t *testing.T) {
 		t.Run("replace named tag list by id", func(t *testing.T) {
 			gotNamedTagList, err := createNamedTagList(
 				baseUrl,
+				"acceptance",
 				NamedTagList{
 					Name: "named tag list",
 					Tags: []string{
@@ -206,7 +209,29 @@ func TestAcceptance(t *testing.T) {
 	})
 
 	t.Run("named tag list buckets", func(t *testing.T) {
-		t.Run("create named tag list without bucket returns bad request", func(t *testing.T) {})
+		t.Run("create named tag list without bucket returns bad request", func(t *testing.T) {
+			_, err := createNamedTagList(
+				baseUrl,
+				"",
+				NamedTagList{
+					Name: "named tag list",
+					Tags: []string{
+						"#windy",
+						"#tdd",
+					},
+				},
+			)
+
+			if err == nil {
+				t.Errorf("got no error want error")
+			}
+
+			gotErr := fmt.Sprint(err)
+			wantErr := "got status-code=400 response-body=map[error:bucket query parameter is required] want status-code=201"
+			if err != nil && !reflect.DeepEqual(gotErr, wantErr) {
+				t.Errorf("got error \"%s\" want \"%s\"", gotErr, wantErr)
+			}
+		})
 		t.Run("get named tag lists without bucket returns bad request", func(t *testing.T) {})
 		t.Run("get named tag lists does not include results from other buckets", func(t *testing.T) {})
 		t.Run("replace named tag list without bucket returns bad request", func(t *testing.T) {})

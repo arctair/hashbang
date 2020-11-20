@@ -14,7 +14,7 @@ type NamedTagListController interface {
 }
 
 type namedTagListController struct {
-	logger Logger
+	logger                 Logger
 	namedTagListRepository NamedTagListRepository
 	namedTagListService    NamedTagListService
 }
@@ -42,6 +42,13 @@ func (c *namedTagListController) GetNamedTagLists() http.Handler {
 func (c *namedTagListController) CreateNamedTagList() http.Handler {
 	return http.HandlerFunc(
 		func(rw http.ResponseWriter, r *http.Request) {
+			buckets := r.URL.Query()["bucket"]
+			if len(buckets) < 1 {
+				rw.WriteHeader(http.StatusBadRequest)
+				json.NewEncoder(rw).Encode(map[string]string{"error": "bucket query parameter is required"})
+				return
+			}
+
 			defer r.Body.Close()
 			var (
 				namedTagList *NamedTagList
@@ -67,7 +74,7 @@ func (c *namedTagListController) ReplaceNamedTagLists() http.Handler {
 			var namedTagList *NamedTagList
 			if json.NewDecoder(r.Body).Decode(&namedTagList) != nil {
 				rw.WriteHeader(http.StatusBadRequest)
-			} else if err := c.namedTagListRepository.ReplaceByIds(r.URL.Query()["id"], *namedTagList) ; err != nil {
+			} else if err := c.namedTagListRepository.ReplaceByIds(r.URL.Query()["id"], *namedTagList); err != nil {
 				rw.WriteHeader(500)
 				c.logger.Error(err)
 			} else {
