@@ -14,7 +14,7 @@ type NamedTagListController interface {
 }
 
 type namedTagListController struct {
-	logger Logger
+	logger                 Logger
 	namedTagListRepository NamedTagListRepository
 	namedTagListService    NamedTagListService
 }
@@ -22,12 +22,19 @@ type namedTagListController struct {
 func (c *namedTagListController) GetNamedTagLists() http.Handler {
 	return http.HandlerFunc(
 		func(rw http.ResponseWriter, r *http.Request) {
+			buckets := r.URL.Query()["bucket"]
+			if len(buckets) < 1 {
+				rw.WriteHeader(http.StatusBadRequest)
+				json.NewEncoder(rw).Encode(map[string]string{"error": "bucket query parameter is required"})
+				return
+			}
+
 			var (
 				namedTagLists []NamedTagList
 				err           error
 			)
-			if namedTagLists, err = c.namedTagListRepository.FindAll(); err != nil {
-				rw.WriteHeader(500)
+			if namedTagLists, err = c.namedTagListRepository.FindAll(buckets); err != nil {
+				rw.WriteHeader(http.StatusInternalServerError)
 				c.logger.Error(err)
 			}
 			bytes, err := json.Marshal(namedTagLists)
@@ -42,6 +49,17 @@ func (c *namedTagListController) GetNamedTagLists() http.Handler {
 func (c *namedTagListController) CreateNamedTagList() http.Handler {
 	return http.HandlerFunc(
 		func(rw http.ResponseWriter, r *http.Request) {
+			buckets := r.URL.Query()["bucket"]
+			if len(buckets) < 1 {
+				rw.WriteHeader(http.StatusBadRequest)
+				json.NewEncoder(rw).Encode(map[string]string{"error": "bucket query parameter is required"})
+				return
+			} else if len(buckets) > 1 {
+				rw.WriteHeader(http.StatusBadRequest)
+				json.NewEncoder(rw).Encode(map[string]string{"error": "no more than one bucket must be supplied"})
+				return
+			}
+
 			defer r.Body.Close()
 			var (
 				namedTagList *NamedTagList
@@ -49,7 +67,7 @@ func (c *namedTagListController) CreateNamedTagList() http.Handler {
 			)
 			if json.NewDecoder(r.Body).Decode(&namedTagList) != nil {
 				rw.WriteHeader(http.StatusBadRequest)
-			} else if namedTagList, err = c.namedTagListService.Create(*namedTagList); err != nil {
+			} else if namedTagList, err = c.namedTagListService.Create(buckets[0], *namedTagList); err != nil {
 				rw.WriteHeader(http.StatusInternalServerError)
 				c.logger.Error(err)
 			} else {
@@ -67,7 +85,7 @@ func (c *namedTagListController) ReplaceNamedTagLists() http.Handler {
 			var namedTagList *NamedTagList
 			if json.NewDecoder(r.Body).Decode(&namedTagList) != nil {
 				rw.WriteHeader(http.StatusBadRequest)
-			} else if err := c.namedTagListRepository.ReplaceByIds(r.URL.Query()["id"], *namedTagList) ; err != nil {
+			} else if err := c.namedTagListRepository.ReplaceByIds(r.URL.Query()["id"], *namedTagList); err != nil {
 				rw.WriteHeader(500)
 				c.logger.Error(err)
 			} else {

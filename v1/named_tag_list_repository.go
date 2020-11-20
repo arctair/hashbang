@@ -9,8 +9,8 @@ import (
 
 // NamedTagListRepository ...
 type NamedTagListRepository interface {
-	FindAll() ([]NamedTagList, error)
-	Create(namedTagList NamedTagList) error
+	FindAll(buckets []string) ([]NamedTagList, error)
+	Create(bucket string, namedTagList NamedTagList) error
 	ReplaceByIds(ids []string, ntl NamedTagList) error
 	DeleteAll() error
 	DeleteByIds(ids []string) error
@@ -20,13 +20,13 @@ type namedTagListRepository struct {
 	pool *pgxpool.Pool
 }
 
-func (r *namedTagListRepository) FindAll() ([]NamedTagList, error) {
+func (r *namedTagListRepository) FindAll(buckets []string) ([]NamedTagList, error) {
 	var (
 		rows pgx.Rows
 		err  error
 	)
 
-	if rows, err = r.pool.Query(context.Background(), "select \"id\", \"name\", \"tags\" from named_tag_lists"); err != nil {
+	if rows, err = r.pool.Query(context.Background(), "select \"id\", \"name\", \"tags\" from named_tag_lists where bucket = ANY($1)", buckets); err != nil {
 		return nil, err
 	}
 
@@ -43,13 +43,14 @@ func (r *namedTagListRepository) FindAll() ([]NamedTagList, error) {
 	return namedTagLists, nil
 }
 
-func (r *namedTagListRepository) Create(namedTagList NamedTagList) error {
+func (r *namedTagListRepository) Create(bucket string, namedTagList NamedTagList) error {
 	_, err := r.pool.Exec(
 		context.Background(),
-		"insert into named_tag_lists (\"id\", \"name\", \"tags\") values ($1, $2, $3)",
+		"insert into named_tag_lists (\"id\", \"name\", \"tags\", \"bucket\") values ($1, $2, $3, $4)",
 		namedTagList.ID,
 		namedTagList.Name,
 		namedTagList.Tags,
+		bucket,
 	)
 	return err
 }

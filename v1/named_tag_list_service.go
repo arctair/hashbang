@@ -2,7 +2,7 @@ package v1
 
 // NamedTagListService ...
 type NamedTagListService interface {
-	Create(namedTagList NamedTagList) (*NamedTagList, error)
+	Create(bucket string, namedTagList NamedTagList) (*NamedTagList, error)
 }
 
 type namedTagListService struct {
@@ -10,9 +10,9 @@ type namedTagListService struct {
 	uuidGenerator          UUIDGenerator
 }
 
-func (s *namedTagListService) Create(namedTagList NamedTagList) (*NamedTagList, error) {
+func (s *namedTagListService) Create(bucket string, namedTagList NamedTagList) (*NamedTagList, error) {
 	namedTagList.ID = s.uuidGenerator.Generate()
-	return &namedTagList, s.namedTagListRepository.Create(namedTagList)
+	return &namedTagList, s.namedTagListRepository.Create(bucket, namedTagList)
 }
 
 // NewNamedTagListService ...

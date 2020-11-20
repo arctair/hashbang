@@ -55,8 +55,9 @@ func TestAcceptance(t *testing.T) {
 	}
 
 	t.Run("named tag list life cycle", func(t *testing.T) {
+		buckets := []string{"acceptance"}
 		t.Run("get named tag lists is empty", func(t *testing.T) {
-			gotNamedTagLists, err := getNamedTagLists(baseUrl)
+			gotNamedTagLists, err := getNamedTagLists(baseUrl, buckets)
 			assertutil.NotError(t, err)
 			wantNamedTagLists := []NamedTagList{}
 
@@ -68,6 +69,7 @@ func TestAcceptance(t *testing.T) {
 		t.Run("create named tag list", func(t *testing.T) {
 			gotNamedTagList, err := createNamedTagList(
 				baseUrl,
+				buckets,
 				NamedTagList{
 					Name: "named tag list",
 					Tags: []string{
@@ -95,7 +97,7 @@ func TestAcceptance(t *testing.T) {
 				t.Errorf("got tags %v want %v", gotNamedTagList.Tags, wantTags)
 			}
 
-			gotNamedTagLists, err := getNamedTagLists(baseUrl)
+			gotNamedTagLists, err := getNamedTagLists(baseUrl, buckets)
 			assertutil.NotError(t, err)
 
 			wantNamedTagLists := []NamedTagList{
@@ -117,6 +119,7 @@ func TestAcceptance(t *testing.T) {
 		t.Run("delete named tag list by id", func(t *testing.T) {
 			gotNamedTagList, err := createNamedTagList(
 				baseUrl,
+				buckets,
 				NamedTagList{
 					Name: "named tag list",
 					Tags: []string{
@@ -130,7 +133,7 @@ func TestAcceptance(t *testing.T) {
 			err = deleteNamedTagList(baseUrl, gotNamedTagList.Id)
 			assertutil.NotError(t, err)
 
-			gotNamedTagLists, err := getNamedTagLists(baseUrl)
+			gotNamedTagLists, err := getNamedTagLists(baseUrl, buckets)
 			assertutil.NotError(t, err)
 
 			if len(gotNamedTagLists) != 1 {
@@ -146,7 +149,7 @@ func TestAcceptance(t *testing.T) {
 			err := deleteNamedTagLists(baseUrl)
 			assertutil.NotError(t, err)
 
-			gotNamedTagLists, err := getNamedTagLists(baseUrl)
+			gotNamedTagLists, err := getNamedTagLists(baseUrl, buckets)
 			assertutil.NotError(t, err)
 			wantNamedTagLists := []NamedTagList{}
 
@@ -158,6 +161,7 @@ func TestAcceptance(t *testing.T) {
 		t.Run("replace named tag list by id", func(t *testing.T) {
 			gotNamedTagList, err := createNamedTagList(
 				baseUrl,
+				buckets,
 				NamedTagList{
 					Name: "named tag list",
 					Tags: []string{
@@ -182,7 +186,7 @@ func TestAcceptance(t *testing.T) {
 			)
 			assertutil.NotError(t, err)
 
-			gotNamedTagLists, err := getNamedTagLists(baseUrl)
+			gotNamedTagLists, err := getNamedTagLists(baseUrl, buckets)
 			assertutil.NotError(t, err)
 
 			wantNamedTagLists := []NamedTagList{
@@ -203,6 +207,87 @@ func TestAcceptance(t *testing.T) {
 			err = deleteNamedTagLists(baseUrl)
 			assertutil.NotError(t, err)
 		})
+	})
+
+	t.Run("named tag list buckets", func(t *testing.T) {
+		for _, scenario := range []struct {
+			buckets          []string
+			wantResponseBody string
+		}{
+			{buckets: []string{}, wantResponseBody: "map[error:bucket query parameter is required]"},
+			{buckets: []string{"two", "buckets"}, wantResponseBody: "map[error:no more than one bucket must be supplied]"},
+		} {
+			t.Run(fmt.Sprintf("create named tag list with bucket=%s returns bad request", scenario), func(t *testing.T) {
+				_, err := createNamedTagList(
+					baseUrl,
+					scenario.buckets,
+					NamedTagList{
+						Name: "named tag list",
+						Tags: []string{
+							"#windy",
+							"#tdd",
+						},
+					},
+				)
+
+				if err == nil {
+					t.Errorf("got no error want error")
+				}
+
+				gotErr := fmt.Sprint(err)
+				wantErr := fmt.Sprintf("got status-code=400 want status-code=201 (response-body=%s)", scenario.wantResponseBody)
+				if err != nil && !reflect.DeepEqual(gotErr, wantErr) {
+					t.Errorf("got error \"%s\" want \"%s\"", gotErr, wantErr)
+				}
+			})
+		}
+		t.Run("get named tag lists without bucket returns bad request", func(t *testing.T) {
+			_, err := getNamedTagLists(baseUrl, []string{})
+			if err == nil {
+				t.Fatalf("got no error want error")
+			}
+
+			gotErr := fmt.Sprint(err)
+			wantErr := "got status-code=400 want status-code=200 (response-body=map[error:bucket query parameter is required])"
+			if err != nil && !reflect.DeepEqual(gotErr, wantErr) {
+				t.Errorf("got error \"%s\" want \"%s\"", gotErr, wantErr)
+			}
+		})
+		t.Run("get named tag lists does not include results from other buckets", func(t *testing.T) {
+			var err error
+			if _, err := createNamedTagList(
+				baseUrl,
+				[]string{"red"},
+				NamedTagList{Name: "red"},
+			); err != nil {
+				t.Fatal(err)
+			}
+
+			var blueNamedTagList *NamedTagList
+			if blueNamedTagList, err = createNamedTagList(
+				baseUrl,
+				[]string{"blue"},
+				NamedTagList{Name: "blue"},
+			); err != nil {
+				t.Fatal(err)
+			}
+
+			var gotNamedTagLists []NamedTagList
+
+			if gotNamedTagLists, err = getNamedTagLists(baseUrl, []string{"blue"}); err != nil {
+				t.Fatal(err)
+			}
+			wantNamedTagLists := []NamedTagList{
+				{Id: blueNamedTagList.Id, Name: "blue"},
+			}
+
+			if !reflect.DeepEqual(gotNamedTagLists, wantNamedTagLists) {
+				t.Errorf("got named tag lists %+v want %+v", gotNamedTagLists, wantNamedTagLists)
+			}
+		})
+		if err := deleteNamedTagLists(baseUrl); err != nil {
+			t.Fatal(err)
+		}
 	})
 
 	t.Run("GET /version returns sha1 and version", func(t *testing.T) {

@@ -29,6 +29,7 @@ func (l *stubLogger) Error(err error) {
 type stubNamedTagListRepositoryForController struct {
 	NamedTagListRepository
 
+	withBuckets      []string
 	withIds          []string
 	withNamedTagList NamedTagList
 	willError        string
@@ -36,11 +37,19 @@ type stubNamedTagListRepositoryForController struct {
 	err error
 }
 
-func (r *stubNamedTagListRepositoryForController) FindAll() ([]NamedTagList, error) {
-	if r.willError == "FindAll" {
+func (r *stubNamedTagListRepositoryForController) FindAll(buckets []string) ([]NamedTagList, error) {
+	requestMatched := reflect.DeepEqual(buckets, r.withBuckets)
+	if !requestMatched {
+		r.err = fmt.Errorf("Stub got buckets %v want %v", buckets, r.withBuckets)
+	}
+	if requestMatched == (r.willError == "FindAll") {
 		return nil, errors.New("there was an error")
 	}
 	return []NamedTagList{r.withNamedTagList}, nil
+}
+
+func (r *stubNamedTagListRepositoryForController) FindAllOld() ([]NamedTagList, error) {
+	return nil, errors.New("do not call")
 }
 
 func (r *stubNamedTagListRepositoryForController) ReplaceByIds(ids []string, ntl NamedTagList) error {
@@ -70,15 +79,22 @@ func (r *stubNamedTagListRepositoryForController) DeleteAll() error {
 }
 
 type stubNamedTagListService struct {
-	dummyNamedTagList NamedTagList
-	willError         string
+	withBucket       string
+	withNamedTagList NamedTagList
+	willError        string
+
+	err error
 }
 
-func (r *stubNamedTagListService) Create(namedTagList NamedTagList) (*NamedTagList, error) {
-	if r.willError == "Create" && reflect.DeepEqual(namedTagList, r.dummyNamedTagList) {
+func (r *stubNamedTagListService) Create(bucket string, ntl NamedTagList) (*NamedTagList, error) {
+	requestMatched := bucket == r.withBucket && reflect.DeepEqual(ntl, r.withNamedTagList)
+	if !requestMatched {
+		r.err = fmt.Errorf("Stub got bucket %s want %v got ntl %+v want %+v", bucket, r.withBucket, ntl, r.withNamedTagList)
+	}
+	if requestMatched == (r.willError == "Create") {
 		return nil, errors.New("there was an error")
 	}
-	return &r.dummyNamedTagList, nil
+	return &r.withNamedTagList, nil
 }
 
 func TestNamedTagListController(t *testing.T) {
@@ -91,17 +107,23 @@ func TestNamedTagListController(t *testing.T) {
 	}
 
 	t.Run("GET", func(t *testing.T) {
+		repository := &stubNamedTagListRepositoryForController{
+			withBuckets:      []string{"red", "blue"},
+			withNamedTagList: dummyNamedTagList,
+		}
 		controller := NewNamedTagListController(
 			stubLoggerNew(),
-			&stubNamedTagListRepositoryForController{
-				withNamedTagList: dummyNamedTagList,
-			},
+			repository,
 			&stubNamedTagListService{},
 		)
 
-		request, _ := http.NewRequest(http.MethodGet, "/", nil)
+		request, _ := http.NewRequest(http.MethodGet, "/?bucket=red&bucket=blue", nil)
 		response := httptest.NewRecorder()
 		controller.GetNamedTagLists().ServeHTTP(response, request)
+
+		if repository.err != nil {
+			t.Error(repository.err)
+		}
 
 		gotStatusCode := response.Result().StatusCode
 		wantStatusCode := 200
@@ -126,11 +148,41 @@ func TestNamedTagListController(t *testing.T) {
 
 	t.Run("GET when repository has error", func(t *testing.T) {
 		logger := stubLoggerNew()
+		repository := &stubNamedTagListRepositoryForController{
+			withBuckets: []string{"bucket"},
+			willError:   "FindAll",
+		}
 		controller := NewNamedTagListController(
 			logger,
-			&stubNamedTagListRepositoryForController{
-				willError: "FindAll",
-			},
+			repository,
+			&stubNamedTagListService{},
+		)
+
+		request, _ := http.NewRequest(http.MethodGet, "/?bucket=bucket", nil)
+		response := httptest.NewRecorder()
+		controller.GetNamedTagLists().ServeHTTP(response, request)
+
+		if repository.err != nil {
+			t.Error(repository.err)
+		}
+
+		gotStatusCode := response.Result().StatusCode
+		wantStatusCode := 500
+
+		if gotStatusCode != wantStatusCode {
+			t.Errorf("got status code %d want %d", gotStatusCode, wantStatusCode)
+		}
+
+		wantErrorf := []string{"there was an error"}
+		if !reflect.DeepEqual(logger.errors, wantErrorf) {
+			t.Errorf("got logger.Errorf %+v want %+v", logger.errors, wantErrorf)
+		}
+	})
+
+	t.Run("GET with no buckets", func(t *testing.T) {
+		controller := NewNamedTagListController(
+			stubLoggerNew(),
+			&stubNamedTagListRepositoryForController{},
 			&stubNamedTagListService{},
 		)
 
@@ -139,25 +191,32 @@ func TestNamedTagListController(t *testing.T) {
 		controller.GetNamedTagLists().ServeHTTP(response, request)
 
 		gotStatusCode := response.Result().StatusCode
-		wantStatusCode := 500
+		wantStatusCode := 400
 
 		if gotStatusCode != wantStatusCode {
 			t.Errorf("got status code %d want %d", gotStatusCode, wantStatusCode)
 		}
-		
-		wantErrorf := []string{"there was an error"}
-		if !reflect.DeepEqual(logger.errors, wantErrorf) {
-			t.Errorf("got logger.Errorf %+v want %+v", logger.errors, wantErrorf)
+
+		var gotResponseBody map[string]string
+		if err := json.NewDecoder(response.Body).Decode(&gotResponseBody); err != nil {
+			t.Fatal(err)
+		}
+
+		wantResponseBody := map[string]string{"error": "bucket query parameter is required"}
+
+		if !reflect.DeepEqual(gotResponseBody, wantResponseBody) {
+			t.Errorf("got response body %+v want %+v", gotResponseBody, wantResponseBody)
 		}
 	})
-
 	t.Run("POST", func(t *testing.T) {
+		service := &stubNamedTagListService{
+			withBucket:       "bucket",
+			withNamedTagList: dummyNamedTagList,
+		}
 		controller := NewNamedTagListController(
 			stubLoggerNew(),
 			&stubNamedTagListRepositoryForController{},
-			&stubNamedTagListService{
-				dummyNamedTagList: dummyNamedTagList,
-			},
+			service,
 		)
 
 		requestBody, err := json.Marshal(dummyNamedTagList)
@@ -165,9 +224,13 @@ func TestNamedTagListController(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		request, _ := http.NewRequest(http.MethodPost, "/", bytes.NewBuffer(requestBody))
+		request, _ := http.NewRequest(http.MethodPost, "/?bucket=bucket", bytes.NewBuffer(requestBody))
 		response := httptest.NewRecorder()
 		controller.CreateNamedTagList().ServeHTTP(response, request)
+
+		if service.err != nil {
+			t.Error(service.err)
+		}
 
 		gotStatusCode := response.Result().StatusCode
 		wantStatusCode := 201
@@ -209,13 +272,48 @@ func TestNamedTagListController(t *testing.T) {
 
 	t.Run("POST when repository has error", func(t *testing.T) {
 		logger := stubLoggerNew()
+		service := &stubNamedTagListService{
+			withBucket:       "bucket",
+			withNamedTagList: dummyNamedTagList,
+			willError:        "Create",
+		}
 		controller := NewNamedTagListController(
 			logger,
 			&stubNamedTagListRepositoryForController{},
-			&stubNamedTagListService{
-				dummyNamedTagList: dummyNamedTagList,
-				willError:         "Create",
-			},
+			service,
+		)
+
+		requestBody, err := json.Marshal(dummyNamedTagList)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		request, _ := http.NewRequest(http.MethodPost, "/?bucket=bucket", bytes.NewBuffer(requestBody))
+		response := httptest.NewRecorder()
+		controller.CreateNamedTagList().ServeHTTP(response, request)
+
+		if service.err != nil {
+			t.Error(service.err)
+		}
+
+		gotStatusCode := response.Result().StatusCode
+		wantStatusCode := 500
+
+		if gotStatusCode != wantStatusCode {
+			t.Errorf("got status code %d want %d", gotStatusCode, wantStatusCode)
+		}
+
+		wantErrorf := []string{"there was an error"}
+		if !reflect.DeepEqual(logger.errors, wantErrorf) {
+			t.Errorf("got logger.Errorf %+v want %+v", logger.errors, wantErrorf)
+		}
+	})
+
+	t.Run("POST when bucket is empty", func(t *testing.T) {
+		controller := NewNamedTagListController(
+			stubLoggerNew(),
+			&stubNamedTagListRepositoryForController{},
+			&stubNamedTagListService{},
 		)
 
 		requestBody, err := json.Marshal(dummyNamedTagList)
@@ -228,15 +326,56 @@ func TestNamedTagListController(t *testing.T) {
 		controller.CreateNamedTagList().ServeHTTP(response, request)
 
 		gotStatusCode := response.Result().StatusCode
-		wantStatusCode := 500
+		wantStatusCode := 400
 
 		if gotStatusCode != wantStatusCode {
 			t.Errorf("got status code %d want %d", gotStatusCode, wantStatusCode)
 		}
-		
-		wantErrorf := []string{"there was an error"}
-		if !reflect.DeepEqual(logger.errors, wantErrorf) {
-			t.Errorf("got logger.Errorf %+v want %+v", logger.errors, wantErrorf)
+
+		var gotResponseBody map[string]string
+		if err := json.NewDecoder(response.Body).Decode(&gotResponseBody); err != nil {
+			t.Fatal(err)
+		}
+
+		wantResponseBody := map[string]string{"error": "bucket query parameter is required"}
+
+		if !reflect.DeepEqual(gotResponseBody, wantResponseBody) {
+			t.Errorf("got response body %+v want %+v", gotResponseBody, wantResponseBody)
+		}
+	})
+
+	t.Run("POST when more than one bucket", func(t *testing.T) {
+		controller := NewNamedTagListController(
+			stubLoggerNew(),
+			&stubNamedTagListRepositoryForController{},
+			&stubNamedTagListService{},
+		)
+
+		requestBody, err := json.Marshal(dummyNamedTagList)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		request, _ := http.NewRequest(http.MethodPost, "/?bucket=one&bucket=two", bytes.NewBuffer(requestBody))
+		response := httptest.NewRecorder()
+		controller.CreateNamedTagList().ServeHTTP(response, request)
+
+		gotStatusCode := response.Result().StatusCode
+		wantStatusCode := 400
+
+		if gotStatusCode != wantStatusCode {
+			t.Errorf("got status code %d want %d", gotStatusCode, wantStatusCode)
+		}
+
+		var gotResponseBody map[string]string
+		if err := json.NewDecoder(response.Body).Decode(&gotResponseBody); err != nil {
+			t.Fatal(err)
+		}
+
+		wantResponseBody := map[string]string{"error": "no more than one bucket must be supplied"}
+
+		if !reflect.DeepEqual(gotResponseBody, wantResponseBody) {
+			t.Errorf("got named tag list %+v want %+v", gotResponseBody, wantResponseBody)
 		}
 	})
 
@@ -331,7 +470,7 @@ func TestNamedTagListController(t *testing.T) {
 		if stubRepository.err != nil {
 			t.Error(stubRepository.err)
 		}
-		
+
 		wantErrorf := []string{"there was an error"}
 		if !reflect.DeepEqual(logger.errors, wantErrorf) {
 			t.Errorf("got logger.Errorf %+v want %+v", logger.errors, wantErrorf)
@@ -358,7 +497,7 @@ func TestNamedTagListController(t *testing.T) {
 	})
 
 	t.Run("DELETE by ids when repository has error", func(t *testing.T) {
-		logger:= stubLoggerNew()
+		logger := stubLoggerNew()
 		controller := NewNamedTagListController(
 			logger,
 			&stubNamedTagListRepositoryForController{
@@ -377,7 +516,7 @@ func TestNamedTagListController(t *testing.T) {
 		if gotStatusCode != wantStatusCode {
 			t.Errorf("got status code %d want %d", gotStatusCode, wantStatusCode)
 		}
-		
+
 		wantErrorf := []string{"there was an error"}
 		if !reflect.DeepEqual(logger.errors, wantErrorf) {
 			t.Errorf("got logger.Errorf %+v want %+v", logger.errors, wantErrorf)
@@ -424,7 +563,7 @@ func TestNamedTagListController(t *testing.T) {
 		if gotStatusCode != wantStatusCode {
 			t.Errorf("got status code %d want %d", gotStatusCode, wantStatusCode)
 		}
-		
+
 		wantErrorf := []string{"there was an error"}
 		if !reflect.DeepEqual(logger.errors, wantErrorf) {
 			t.Errorf("got logger.Errorf %+v want %+v", logger.errors, wantErrorf)
