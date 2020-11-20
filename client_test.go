@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 )
 
 type NamedTagList struct {
@@ -43,10 +44,9 @@ func getNamedTagLists(baseUrl string) ([]NamedTagList, error) {
 	return namedTagLists, err
 }
 
-func createNamedTagList(baseUrl string, bucket string, namedTagList NamedTagList) (*NamedTagList, error) {
+func createNamedTagList(baseUrl string, buckets []string, namedTagList NamedTagList) (*NamedTagList, error) {
 	var (
 		err         error
-		url         string
 		requestBody []byte
 		response    *http.Response
 	)
@@ -55,14 +55,12 @@ func createNamedTagList(baseUrl string, bucket string, namedTagList NamedTagList
 		return nil, err
 	}
 
-	if len(bucket) > 0 {
-		url = fmt.Sprintf("%s/namedTagLists?bucket=%s", baseUrl, bucket)
-	} else {
-		url = fmt.Sprintf("%s/namedTagLists", baseUrl)
+	query := []string{}
+	for _, bucket := range buckets {
+		query = append(query, fmt.Sprintf("bucket=%s", bucket))
 	}
-
 	if response, err = http.Post(
-		url,
+		fmt.Sprintf("%s/namedTagLists?%s", baseUrl, strings.Join(query, "&")),
 		"application/json",
 		bytes.NewBuffer(requestBody),
 	); err != nil {
@@ -79,7 +77,7 @@ func createNamedTagList(baseUrl string, bucket string, namedTagList NamedTagList
 		if err != nil {
 			return nil, fmt.Errorf("got status-code=%d want status-code=%d", gotStatusCode, wantStatusCode)
 		} else {
-			return nil, fmt.Errorf("got status-code=%d response-body=%+v want status-code=%d", gotStatusCode, responseBody, wantStatusCode)
+			return nil, fmt.Errorf("got status-code=%d want status-code=%d (response-body=%+v)", gotStatusCode, wantStatusCode, responseBody)
 		}
 	}
 

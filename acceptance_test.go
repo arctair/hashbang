@@ -68,7 +68,7 @@ func TestAcceptance(t *testing.T) {
 		t.Run("create named tag list", func(t *testing.T) {
 			gotNamedTagList, err := createNamedTagList(
 				baseUrl,
-				"acceptance",
+				[]string{"acceptance"},
 				NamedTagList{
 					Name: "named tag list",
 					Tags: []string{
@@ -118,7 +118,7 @@ func TestAcceptance(t *testing.T) {
 		t.Run("delete named tag list by id", func(t *testing.T) {
 			gotNamedTagList, err := createNamedTagList(
 				baseUrl,
-				"acceptance",
+				[]string{"acceptance"},
 				NamedTagList{
 					Name: "named tag list",
 					Tags: []string{
@@ -160,7 +160,7 @@ func TestAcceptance(t *testing.T) {
 		t.Run("replace named tag list by id", func(t *testing.T) {
 			gotNamedTagList, err := createNamedTagList(
 				baseUrl,
-				"acceptance",
+				[]string{"acceptance"},
 				NamedTagList{
 					Name: "named tag list",
 					Tags: []string{
@@ -209,29 +209,37 @@ func TestAcceptance(t *testing.T) {
 	})
 
 	t.Run("named tag list buckets", func(t *testing.T) {
-		t.Run("create named tag list without bucket returns bad request", func(t *testing.T) {
-			_, err := createNamedTagList(
-				baseUrl,
-				"",
-				NamedTagList{
-					Name: "named tag list",
-					Tags: []string{
-						"#windy",
-						"#tdd",
+		for _, scenario := range []struct {
+			buckets          []string
+			wantResponseBody string
+		}{
+			{buckets: []string{}, wantResponseBody: "map[error:bucket query parameter is required]"},
+			{buckets: []string{"two", "buckets"}, wantResponseBody: "map[error:no more than one bucket must be supplied]"},
+		} {
+			t.Run(fmt.Sprintf("create named tag list with bucket=%s returns bad request", scenario), func(t *testing.T) {
+				_, err := createNamedTagList(
+					baseUrl,
+					scenario.buckets,
+					NamedTagList{
+						Name: "named tag list",
+						Tags: []string{
+							"#windy",
+							"#tdd",
+						},
 					},
-				},
-			)
+				)
 
-			if err == nil {
-				t.Errorf("got no error want error")
-			}
+				if err == nil {
+					t.Errorf("got no error want error")
+				}
 
-			gotErr := fmt.Sprint(err)
-			wantErr := "got status-code=400 response-body=map[error:bucket query parameter is required] want status-code=201"
-			if err != nil && !reflect.DeepEqual(gotErr, wantErr) {
-				t.Errorf("got error \"%s\" want \"%s\"", gotErr, wantErr)
-			}
-		})
+				gotErr := fmt.Sprint(err)
+				wantErr := fmt.Sprintf("got status-code=400 want status-code=201 (response-body=%s)", scenario.wantResponseBody)
+				if err != nil && !reflect.DeepEqual(gotErr, wantErr) {
+					t.Errorf("got error \"%s\" want \"%s\"", gotErr, wantErr)
+				}
+			})
+		}
 		t.Run("get named tag lists without bucket returns bad request", func(t *testing.T) {})
 		t.Run("get named tag lists does not include results from other buckets", func(t *testing.T) {})
 		t.Run("replace named tag list without bucket returns bad request", func(t *testing.T) {})

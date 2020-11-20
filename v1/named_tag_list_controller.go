@@ -47,6 +47,10 @@ func (c *namedTagListController) CreateNamedTagList() http.Handler {
 				rw.WriteHeader(http.StatusBadRequest)
 				json.NewEncoder(rw).Encode(map[string]string{"error": "bucket query parameter is required"})
 				return
+			} else if len(buckets) > 1 {
+				rw.WriteHeader(http.StatusBadRequest)
+				json.NewEncoder(rw).Encode(map[string]string{"error": "no more than one bucket must be supplied"})
+				return
 			}
 
 			defer r.Body.Close()

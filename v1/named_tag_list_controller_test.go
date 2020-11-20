@@ -275,6 +275,41 @@ func TestNamedTagListController(t *testing.T) {
 		}
 	})
 
+	t.Run("POST when more than one bucket", func(t *testing.T) {
+		controller := NewNamedTagListController(
+			stubLoggerNew(),
+			&stubNamedTagListRepositoryForController{},
+			&stubNamedTagListService{},
+		)
+
+		requestBody, err := json.Marshal(dummyNamedTagList)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		request, _ := http.NewRequest(http.MethodPost, "/?bucket=one&bucket=two", bytes.NewBuffer(requestBody))
+		response := httptest.NewRecorder()
+		controller.CreateNamedTagList().ServeHTTP(response, request)
+
+		gotStatusCode := response.Result().StatusCode
+		wantStatusCode := 400
+
+		if gotStatusCode != wantStatusCode {
+			t.Errorf("got status code %d want %d", gotStatusCode, wantStatusCode)
+		}
+
+		var gotResponseBody map[string]string
+		if err := json.NewDecoder(response.Body).Decode(&gotResponseBody); err != nil {
+			t.Fatal(err)
+		}
+
+		wantResponseBody := map[string]string{"error": "no more than one bucket must be supplied"}
+
+		if !reflect.DeepEqual(gotResponseBody, wantResponseBody) {
+			t.Errorf("got named tag list %+v want %+v", gotResponseBody, wantResponseBody)
+		}
+	})
+
 	t.Run("PUT", func(t *testing.T) {
 		stubRepository := &stubNamedTagListRepositoryForController{
 			withIds:          []string{"deadbeef-dead-beef-dead-beefdeadbeef"},
