@@ -22,12 +22,19 @@ type namedTagListController struct {
 func (c *namedTagListController) GetNamedTagLists() http.Handler {
 	return http.HandlerFunc(
 		func(rw http.ResponseWriter, r *http.Request) {
+			buckets := r.URL.Query()["bucket"]
+			if len(buckets) < 1 {
+				rw.WriteHeader(http.StatusBadRequest)
+				json.NewEncoder(rw).Encode(map[string]string{"error": "bucket query parameter is required"})
+				return
+			}
+
 			var (
 				namedTagLists []NamedTagList
 				err           error
 			)
 			if namedTagLists, err = c.namedTagListRepository.FindAll(); err != nil {
-				rw.WriteHeader(500)
+				rw.WriteHeader(http.StatusInternalServerError)
 				c.logger.Error(err)
 			}
 			bytes, err := json.Marshal(namedTagLists)

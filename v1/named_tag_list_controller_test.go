@@ -99,7 +99,7 @@ func TestNamedTagListController(t *testing.T) {
 			&stubNamedTagListService{},
 		)
 
-		request, _ := http.NewRequest(http.MethodGet, "/", nil)
+		request, _ := http.NewRequest(http.MethodGet, "/?bucket=bucket", nil)
 		response := httptest.NewRecorder()
 		controller.GetNamedTagLists().ServeHTTP(response, request)
 
@@ -134,7 +134,7 @@ func TestNamedTagListController(t *testing.T) {
 			&stubNamedTagListService{},
 		)
 
-		request, _ := http.NewRequest(http.MethodGet, "/", nil)
+		request, _ := http.NewRequest(http.MethodGet, "/?bucket=bucket", nil)
 		response := httptest.NewRecorder()
 		controller.GetNamedTagLists().ServeHTTP(response, request)
 
@@ -151,6 +151,35 @@ func TestNamedTagListController(t *testing.T) {
 		}
 	})
 
+	t.Run("GET with no buckets", func(t *testing.T) {
+		controller := NewNamedTagListController(
+			stubLoggerNew(),
+			&stubNamedTagListRepositoryForController{},
+			&stubNamedTagListService{},
+		)
+
+		request, _ := http.NewRequest(http.MethodGet, "/", nil)
+		response := httptest.NewRecorder()
+		controller.GetNamedTagLists().ServeHTTP(response, request)
+
+		gotStatusCode := response.Result().StatusCode
+		wantStatusCode := 400
+
+		if gotStatusCode != wantStatusCode {
+			t.Errorf("got status code %d want %d", gotStatusCode, wantStatusCode)
+		}
+
+		var gotResponseBody map[string]string
+		if err := json.NewDecoder(response.Body).Decode(&gotResponseBody); err != nil {
+			t.Fatal(err)
+		}
+
+		wantResponseBody := map[string]string{"error": "bucket query parameter is required"}
+
+		if !reflect.DeepEqual(gotResponseBody, wantResponseBody) {
+			t.Errorf("got response body %+v want %+v", gotResponseBody, wantResponseBody)
+		}
+	})
 	t.Run("POST", func(t *testing.T) {
 		controller := NewNamedTagListController(
 			stubLoggerNew(),

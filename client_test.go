@@ -21,21 +21,18 @@ type Build struct {
 	Version string
 }
 
-func getNamedTagLists(baseUrl string) ([]NamedTagList, error) {
+func getNamedTagLists(baseUrl string, buckets []string) ([]NamedTagList, error) {
 	var (
 		err      error
 		response *http.Response
 	)
 
-	if response, err = http.Get(fmt.Sprintf("%s/namedTagLists", baseUrl)); err != nil {
+	if response, err = http.Get(fmt.Sprintf("%s/namedTagLists?%s", baseUrl, queryString(buckets))); err != nil {
 		return nil, err
 	}
 
-	gotStatusCode := response.StatusCode
-	wantStatusCode := 200
-
-	if gotStatusCode != wantStatusCode {
-		return nil, fmt.Errorf("got status code %d want %d", gotStatusCode, wantStatusCode)
+	if err := assertStatusCode(response, 200); err != nil {
+		return nil, err
 	}
 
 	var namedTagLists []NamedTagList
@@ -55,30 +52,16 @@ func createNamedTagList(baseUrl string, buckets []string, namedTagList NamedTagL
 		return nil, err
 	}
 
-	query := []string{}
-	for _, bucket := range buckets {
-		query = append(query, fmt.Sprintf("bucket=%s", bucket))
-	}
 	if response, err = http.Post(
-		fmt.Sprintf("%s/namedTagLists?%s", baseUrl, strings.Join(query, "&")),
+		fmt.Sprintf("%s/namedTagLists?%s", baseUrl, queryString(buckets)),
 		"application/json",
 		bytes.NewBuffer(requestBody),
 	); err != nil {
 		return nil, err
 	}
 
-	gotStatusCode := response.StatusCode
-	wantStatusCode := 201
-
-	if gotStatusCode != wantStatusCode {
-		var responseBody map[string]string
-		defer response.Body.Close()
-		err = json.NewDecoder(response.Body).Decode(&responseBody)
-		if err != nil {
-			return nil, fmt.Errorf("got status-code=%d want status-code=%d", gotStatusCode, wantStatusCode)
-		} else {
-			return nil, fmt.Errorf("got status-code=%d want status-code=%d (response-body=%+v)", gotStatusCode, wantStatusCode, responseBody)
-		}
+	if err := assertStatusCode(response, 201); err != nil {
+		return nil, err
 	}
 
 	defer response.Body.Close()
@@ -196,4 +179,26 @@ func getVersion(baseUrl string) (*Build, error) {
 	defer response.Body.Close()
 	err = json.NewDecoder(response.Body).Decode(&build)
 	return &build, err
+}
+
+func queryString(buckets []string) string {
+	query := []string{}
+	for _, bucket := range buckets {
+		query = append(query, fmt.Sprintf("bucket=%s", bucket))
+	}
+	return strings.Join(query, "&")
+}
+
+func assertStatusCode(response *http.Response, wantStatusCode int) error {
+	gotStatusCode := response.StatusCode
+	if gotStatusCode != wantStatusCode {
+		var responseBody map[string]string
+		defer response.Body.Close()
+		if err := json.NewDecoder(response.Body).Decode(&responseBody); err != nil {
+			return fmt.Errorf("got status-code=%d want status-code=%d", gotStatusCode, wantStatusCode)
+		} else {
+			return fmt.Errorf("got status-code=%d want status-code=%d (response-body=%+v)", gotStatusCode, wantStatusCode, responseBody)
+		}
+	}
+	return nil
 }
