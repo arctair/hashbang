@@ -205,6 +205,18 @@ func TestAcceptance(t *testing.T) {
 		})
 	})
 
+	t.Run("named tag list buckets", func(t *testing.T) {
+		t.Run("create named tag list without bucket returns bad request", func(t *testing.T) {})
+		t.Run("get named tag lists without bucket returns bad request", func(t *testing.T) {})
+		t.Run("get named tag lists does not include results from other buckets", func(t *testing.T) {})
+		t.Run("replace named tag list without bucket returns bad request", func(t *testing.T) {})
+		t.Run("replace named tag list with wrong bucket returns bad request", func(t *testing.T) {})
+		t.Run("delete named tag lists by id without bucket returns bad request", func(t *testing.T) {})
+		t.Run("delete named tag lists by id with wrong bucket returns bad request", func(t *testing.T) {})
+		t.Run("delete named tag lists without bucket returns bad request", func(t *testing.T) {})
+		t.Run("delete named tag lists does not delete results from other buckets", func(t *testing.T) {})
+	})
+
 	t.Run("GET /version returns sha1 and version", func(t *testing.T) {
 		build, err := getVersion(baseUrl)
 		assertutil.NotError(t, err)
