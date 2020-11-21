@@ -48,10 +48,6 @@ func (r *stubNamedTagListRepositoryForController) FindAll(buckets []string) ([]N
 	return []NamedTagList{r.withNamedTagList}, nil
 }
 
-func (r *stubNamedTagListRepositoryForController) FindAllOld() ([]NamedTagList, error) {
-	return nil, errors.New("do not call")
-}
-
 func (r *stubNamedTagListRepositoryForController) ReplaceByIds(ids []string, ntl NamedTagList) error {
 	requestMatched := reflect.DeepEqual(ids, r.withIds) && reflect.DeepEqual(ntl, r.withNamedTagList)
 	willError := (r.willError == "ReplaceByIds")
