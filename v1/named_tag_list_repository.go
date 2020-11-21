@@ -11,7 +11,6 @@ import (
 type NamedTagListRepository interface {
 	FindAllOld() ([]NamedTagList, error)
 	FindAll(buckets []string) ([]NamedTagList, error)
-	CreateOld(namedTagList NamedTagList) error
 	Create(bucket string, namedTagList NamedTagList) error
 	ReplaceByIds(ids []string, ntl NamedTagList) error
 	DeleteAll() error
@@ -66,17 +65,6 @@ func (r *namedTagListRepository) FindAll(buckets []string) ([]NamedTagList, erro
 	}
 
 	return namedTagLists, nil
-}
-
-func (r *namedTagListRepository) CreateOld(namedTagList NamedTagList) error {
-	_, err := r.pool.Exec(
-		context.Background(),
-		"insert into named_tag_lists (\"id\", \"name\", \"tags\") values ($1, $2, $3)",
-		namedTagList.ID,
-		namedTagList.Name,
-		namedTagList.Tags,
-	)
-	return err
 }
 
 func (r *namedTagListRepository) Create(bucket string, namedTagList NamedTagList) error {

@@ -29,7 +29,8 @@ func TestNamedTagListRepository(t *testing.T) {
 	})
 
 	t.Run("create named tag list", func(t *testing.T) {
-		if err := NewNamedTagListRepository(pool).CreateOld(
+		if err := NewNamedTagListRepository(pool).Create(
+			"bucket",
 			NamedTagList{
 				ID:   "7fe6ca35-d868-48a9-94d4-6e7f7db450ea",
 				Name: "tag list name",
@@ -42,7 +43,8 @@ func TestNamedTagListRepository(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		if err := NewNamedTagListRepository(pool).CreateOld(
+		if err := NewNamedTagListRepository(pool).Create(
+			"bucket",
 			NamedTagList{
 				ID:   "a5a5acbf-1541-4fd8-bf9a-343b75b8550f",
 				Name: "tag list name",
@@ -119,7 +121,8 @@ func TestNamedTagListRepository(t *testing.T) {
 	})
 
 	t.Run("replace named tag list by id", func(t *testing.T) {
-		if err := NewNamedTagListRepository(pool).CreateOld(
+		if err := NewNamedTagListRepository(pool).Create(
+			"bucket",
 			NamedTagList{
 				ID:   "beefdead-d868-48a9-94d4-6e7f7db450ea",
 				Name: "tag list name",
@@ -132,7 +135,8 @@ func TestNamedTagListRepository(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		if err := NewNamedTagListRepository(pool).CreateOld(
+		if err := NewNamedTagListRepository(pool).Create(
+			"bucket",
 			NamedTagList{
 				ID:   "deadbeef-d868-48a9-94d4-6e7f7db450ea",
 				Name: "tag list name",
