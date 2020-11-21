@@ -253,13 +253,48 @@ func TestAcceptance(t *testing.T) {
 				t.Errorf("got error \"%s\" want \"%s\"", gotErr, wantErr)
 			}
 		})
-		t.Run("get named tag lists does not include results from other buckets", func(t *testing.T) {})
+		t.Run("get named tag lists does not include results from other buckets", func(t *testing.T) {
+			var err error
+			if _, err := createNamedTagList(
+				baseUrl,
+				[]string{"red"},
+				NamedTagList{Name: "red"},
+			); err != nil {
+				t.Fatal(err)
+			}
+
+			var blueNamedTagList *NamedTagList
+			if blueNamedTagList, err = createNamedTagList(
+				baseUrl,
+				[]string{"blue"},
+				NamedTagList{Name: "blue"},
+			); err != nil {
+				t.Fatal(err)
+			}
+
+			var gotNamedTagLists []NamedTagList
+
+			if gotNamedTagLists, err = getNamedTagLists(baseUrl, []string{"blue"}); err != nil {
+				t.Fatal(err)
+			}
+			wantNamedTagLists := []NamedTagList{
+				{Id: blueNamedTagList.Id, Name: "blue"},
+			}
+
+			if !reflect.DeepEqual(gotNamedTagLists, wantNamedTagLists) {
+				t.Errorf("got named tag lists %+v want %+v", gotNamedTagLists, wantNamedTagLists)
+			}
+		})
 		t.Run("replace named tag list without bucket returns bad request", func(t *testing.T) {})
 		t.Run("replace named tag list with wrong bucket returns bad request", func(t *testing.T) {})
 		t.Run("delete named tag lists by id without bucket returns bad request", func(t *testing.T) {})
 		t.Run("delete named tag lists by id with wrong bucket returns bad request", func(t *testing.T) {})
 		t.Run("delete named tag lists without bucket returns bad request", func(t *testing.T) {})
-		t.Run("delete named tag lists does not delete results from other buckets", func(t *testing.T) {})
+		t.Run("delete named tag lists does not delete results from other buckets", func(t *testing.T) {
+			if err := deleteNamedTagLists(baseUrl); err != nil {
+				t.Fatal(err)
+			}
+		})
 	})
 
 	t.Run("GET /version returns sha1 and version", func(t *testing.T) {

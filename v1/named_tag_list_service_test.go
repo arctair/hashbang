@@ -54,7 +54,7 @@ func TestNamedTagListService(t *testing.T) {
 			},
 		)
 
-		gotResponse, err := service.Create(request)
+		gotResponse, err := service.CreateOld(request)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -73,7 +73,7 @@ func TestNamedTagListService(t *testing.T) {
 			&stubUUIDGenerator{},
 		)
 
-		_, gotErr := service.Create(request)
+		_, gotErr := service.CreateOld(request)
 
 		if gotErr == nil {
 			t.Fatal("got no error")

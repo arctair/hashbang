@@ -67,7 +67,7 @@ func (c *namedTagListController) CreateNamedTagList() http.Handler {
 			)
 			if json.NewDecoder(r.Body).Decode(&namedTagList) != nil {
 				rw.WriteHeader(http.StatusBadRequest)
-			} else if namedTagList, err = c.namedTagListService.Create(*namedTagList); err != nil {
+			} else if namedTagList, err = c.namedTagListService.Create(buckets[0], *namedTagList); err != nil {
 				rw.WriteHeader(http.StatusInternalServerError)
 				c.logger.Error(err)
 			} else {

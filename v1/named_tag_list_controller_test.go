@@ -29,6 +29,7 @@ func (l *stubLogger) Error(err error) {
 type stubNamedTagListRepositoryForController struct {
 	NamedTagListRepository
 
+	withBuckets      []string
 	withIds          []string
 	withNamedTagList NamedTagList
 	willError        string
@@ -70,15 +71,26 @@ func (r *stubNamedTagListRepositoryForController) DeleteAll() error {
 }
 
 type stubNamedTagListService struct {
-	dummyNamedTagList NamedTagList
-	willError         string
+	withBucket       string
+	withNamedTagList NamedTagList
+	willError        string
+
+	err error
 }
 
-func (r *stubNamedTagListService) Create(namedTagList NamedTagList) (*NamedTagList, error) {
-	if r.willError == "Create" && reflect.DeepEqual(namedTagList, r.dummyNamedTagList) {
+func (r *stubNamedTagListService) CreateOld(ntl NamedTagList) (*NamedTagList, error) {
+	return nil, errors.New("do not call")
+}
+
+func (r *stubNamedTagListService) Create(bucket string, ntl NamedTagList) (*NamedTagList, error) {
+	requestMatched := bucket == r.withBucket && reflect.DeepEqual(ntl, r.withNamedTagList)
+	if !requestMatched {
+		r.err = fmt.Errorf("Stub got bucket %s want %v got ntl %+v want %+v", bucket, r.withBucket, ntl, r.withNamedTagList)
+	}
+	if requestMatched == (r.willError == "Create") {
 		return nil, errors.New("there was an error")
 	}
-	return &r.dummyNamedTagList, nil
+	return &r.withNamedTagList, nil
 }
 
 func TestNamedTagListController(t *testing.T) {
@@ -91,17 +103,23 @@ func TestNamedTagListController(t *testing.T) {
 	}
 
 	t.Run("GET", func(t *testing.T) {
+		repository := &stubNamedTagListRepositoryForController{
+			withBuckets:      []string{"red", "blue"},
+			withNamedTagList: dummyNamedTagList,
+		}
 		controller := NewNamedTagListController(
 			stubLoggerNew(),
-			&stubNamedTagListRepositoryForController{
-				withNamedTagList: dummyNamedTagList,
-			},
+			repository,
 			&stubNamedTagListService{},
 		)
 
-		request, _ := http.NewRequest(http.MethodGet, "/?bucket=bucket", nil)
+		request, _ := http.NewRequest(http.MethodGet, "/?bucket=red&bucket=blue", nil)
 		response := httptest.NewRecorder()
 		controller.GetNamedTagLists().ServeHTTP(response, request)
+
+		if repository.err != nil {
+			t.Error(repository.err)
+		}
 
 		gotStatusCode := response.Result().StatusCode
 		wantStatusCode := 200
@@ -181,12 +199,14 @@ func TestNamedTagListController(t *testing.T) {
 		}
 	})
 	t.Run("POST", func(t *testing.T) {
+		service := &stubNamedTagListService{
+			withBucket:       "bucket",
+			withNamedTagList: dummyNamedTagList,
+		}
 		controller := NewNamedTagListController(
 			stubLoggerNew(),
 			&stubNamedTagListRepositoryForController{},
-			&stubNamedTagListService{
-				dummyNamedTagList: dummyNamedTagList,
-			},
+			service,
 		)
 
 		requestBody, err := json.Marshal(dummyNamedTagList)
@@ -197,6 +217,10 @@ func TestNamedTagListController(t *testing.T) {
 		request, _ := http.NewRequest(http.MethodPost, "/?bucket=bucket", bytes.NewBuffer(requestBody))
 		response := httptest.NewRecorder()
 		controller.CreateNamedTagList().ServeHTTP(response, request)
+
+		if service.err != nil {
+			t.Error(service.err)
+		}
 
 		gotStatusCode := response.Result().StatusCode
 		wantStatusCode := 201
@@ -238,13 +262,15 @@ func TestNamedTagListController(t *testing.T) {
 
 	t.Run("POST when repository has error", func(t *testing.T) {
 		logger := stubLoggerNew()
+		service := &stubNamedTagListService{
+			withBucket:       "bucket",
+			withNamedTagList: dummyNamedTagList,
+			willError:        "Create",
+		}
 		controller := NewNamedTagListController(
 			logger,
 			&stubNamedTagListRepositoryForController{},
-			&stubNamedTagListService{
-				dummyNamedTagList: dummyNamedTagList,
-				willError:         "Create",
-			},
+			service,
 		)
 
 		requestBody, err := json.Marshal(dummyNamedTagList)
@@ -255,6 +281,10 @@ func TestNamedTagListController(t *testing.T) {
 		request, _ := http.NewRequest(http.MethodPost, "/?bucket=bucket", bytes.NewBuffer(requestBody))
 		response := httptest.NewRecorder()
 		controller.CreateNamedTagList().ServeHTTP(response, request)
+
+		if service.err != nil {
+			t.Error(service.err)
+		}
 
 		gotStatusCode := response.Result().StatusCode
 		wantStatusCode := 500
