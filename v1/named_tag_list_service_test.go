@@ -2,6 +2,7 @@ package v1
 
 import (
 	"errors"
+	"fmt"
 	"reflect"
 	"testing"
 )
@@ -9,12 +10,23 @@ import (
 type stubNamedTagListRepositoryForService struct {
 	NamedTagListRepository
 
-	request   NamedTagList
-	willError bool
+	withBucket       string
+	withNamedTagList NamedTagList
+	willError        bool
+
+	err error
 }
 
-func (r *stubNamedTagListRepositoryForService) Create(namedTagList NamedTagList) error {
-	if r.willError || !reflect.DeepEqual(namedTagList, r.request) {
+func (r *stubNamedTagListRepositoryForService) CreateOld(namedTagList NamedTagList) error {
+	return errors.New("do not call")
+}
+
+func (r *stubNamedTagListRepositoryForService) Create(bucket string, namedTagList NamedTagList) error {
+	requestMatched := bucket == r.withBucket && reflect.DeepEqual(namedTagList, r.withNamedTagList)
+	if !requestMatched {
+		r.err = fmt.Errorf("Stub got bucket %s want %s got named tag list %+v want %+v", bucket, r.withBucket, namedTagList, r.withNamedTagList)
+	}
+	if requestMatched == r.willError {
 		return errors.New("there was an error")
 	}
 	return nil
@@ -45,18 +57,27 @@ func TestNamedTagListService(t *testing.T) {
 				"#tdd",
 			},
 		}
+		repository := &stubNamedTagListRepositoryForService{
+			withBucket:       "bucket",
+			withNamedTagList: response,
+		}
 		service := NewNamedTagListService(
-			&stubNamedTagListRepositoryForService{
-				request: response,
-			},
+			repository,
 			&stubUUIDGenerator{
 				response: "3e99aa77-615e-4a55-930d-d4c77cfd1b72",
 			},
 		)
 
-		gotResponse, err := service.CreateOld(request)
-		if err != nil {
+		var (
+			gotResponse *NamedTagList
+			err         error
+		)
+		if gotResponse, err = service.Create("bucket", request); err != nil {
 			t.Fatal(err)
+		}
+
+		if repository.err != nil {
+			t.Error(repository.err)
 		}
 
 		if !reflect.DeepEqual(gotResponse, &response) {
@@ -65,15 +86,21 @@ func TestNamedTagListService(t *testing.T) {
 	})
 
 	t.Run("create when repository has error", func(t *testing.T) {
+		repository := &stubNamedTagListRepositoryForService{
+			withBucket:       "bucket",
+			withNamedTagList: request,
+			willError:        true,
+		}
 		service := NewNamedTagListService(
-			&stubNamedTagListRepositoryForService{
-				request:   request,
-				willError: true,
-			},
+			repository,
 			&stubUUIDGenerator{},
 		)
 
-		_, gotErr := service.CreateOld(request)
+		_, gotErr := service.Create("bucket", request)
+
+		if repository.err != nil {
+			t.Error(repository.err)
+		}
 
 		if gotErr == nil {
 			t.Fatal("got no error")

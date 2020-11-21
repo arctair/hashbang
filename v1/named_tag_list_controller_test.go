@@ -86,10 +86,6 @@ type stubNamedTagListService struct {
 	err error
 }
 
-func (r *stubNamedTagListService) CreateOld(ntl NamedTagList) (*NamedTagList, error) {
-	return nil, errors.New("do not call")
-}
-
 func (r *stubNamedTagListService) Create(bucket string, ntl NamedTagList) (*NamedTagList, error) {
 	requestMatched := bucket == r.withBucket && reflect.DeepEqual(ntl, r.withNamedTagList)
 	if !requestMatched {

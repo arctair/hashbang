@@ -2,7 +2,6 @@ package v1
 
 import (
 	"context"
-	"errors"
 
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
@@ -12,7 +11,8 @@ import (
 type NamedTagListRepository interface {
 	FindAllOld() ([]NamedTagList, error)
 	FindAll(buckets []string) ([]NamedTagList, error)
-	Create(namedTagList NamedTagList) error
+	CreateOld(namedTagList NamedTagList) error
+	Create(bucket string, namedTagList NamedTagList) error
 	ReplaceByIds(ids []string, ntl NamedTagList) error
 	DeleteAll() error
 	DeleteByIds(ids []string) error
@@ -20,10 +20,6 @@ type NamedTagListRepository interface {
 
 type namedTagListRepository struct {
 	pool *pgxpool.Pool
-}
-
-func (r *namedTagListRepository) FindAll(buckets []string) ([]NamedTagList, error) {
-	return nil, errors.New("not implemented")
 }
 
 func (r *namedTagListRepository) FindAllOld() ([]NamedTagList, error) {
@@ -49,7 +45,41 @@ func (r *namedTagListRepository) FindAllOld() ([]NamedTagList, error) {
 	return namedTagLists, nil
 }
 
-func (r *namedTagListRepository) Create(namedTagList NamedTagList) error {
+func (r *namedTagListRepository) FindAll(buckets []string) ([]NamedTagList, error) {
+	var (
+		rows pgx.Rows
+		err  error
+	)
+
+	if rows, err = r.pool.Query(context.Background(), "select \"id\", \"name\", \"tags\" from named_tag_lists"); err != nil {
+		return nil, err
+	}
+
+	namedTagLists := []NamedTagList{}
+
+	var namedTagList NamedTagList
+	for rows.Next() {
+		if err = rows.Scan(&namedTagList.ID, &namedTagList.Name, &namedTagList.Tags); err != nil {
+			return nil, err
+		}
+		namedTagLists = append(namedTagLists, namedTagList)
+	}
+
+	return namedTagLists, nil
+}
+
+func (r *namedTagListRepository) CreateOld(namedTagList NamedTagList) error {
+	_, err := r.pool.Exec(
+		context.Background(),
+		"insert into named_tag_lists (\"id\", \"name\", \"tags\") values ($1, $2, $3)",
+		namedTagList.ID,
+		namedTagList.Name,
+		namedTagList.Tags,
+	)
+	return err
+}
+
+func (r *namedTagListRepository) Create(bucket string, namedTagList NamedTagList) error {
 	_, err := r.pool.Exec(
 		context.Background(),
 		"insert into named_tag_lists (\"id\", \"name\", \"tags\") values ($1, $2, $3)",

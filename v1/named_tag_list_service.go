@@ -3,7 +3,6 @@ package v1
 // NamedTagListService ...
 type NamedTagListService interface {
 	Create(bucket string, namedTagList NamedTagList) (*NamedTagList, error)
-	CreateOld(namedTagList NamedTagList) (*NamedTagList, error)
 }
 
 type namedTagListService struct {
@@ -12,12 +11,8 @@ type namedTagListService struct {
 }
 
 func (s *namedTagListService) Create(bucket string, namedTagList NamedTagList) (*NamedTagList, error) {
-	return nil, nil
-}
-
-func (s *namedTagListService) CreateOld(namedTagList NamedTagList) (*NamedTagList, error) {
 	namedTagList.ID = s.uuidGenerator.Generate()
-	return &namedTagList, s.namedTagListRepository.Create(namedTagList)
+	return &namedTagList, s.namedTagListRepository.Create(bucket, namedTagList)
 }
 
 // NewNamedTagListService ...
