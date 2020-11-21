@@ -33,6 +33,8 @@ func Migrate(pool *pgxpool.Pool) error {
 	migrations := []Migration{
 		{Index: 5, Sql: "create table named_tag_lists (\"name\" text, \"tags\" text[])"},
 		{Index: 6, Sql: "alter table named_tag_lists add column id uuid primary key"},
+		{Index: 7, Sql: "alter table named_tag_lists add column bucket text not null default 'default'"},
+		{Index: 8, Sql: "create index on named_tag_lists (bucket)"},
 	}
 
 	for _, migration := range migrations {

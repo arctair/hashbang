@@ -19,6 +19,8 @@ func TestNamedTagListRepository(t *testing.T) {
 	assertutil.NotError(t, err)
 	assertutil.NotError(t, Migrate(pool))
 
+	deadbeef := "deadbeef-dead-beef-dead-beefdeadbeef"
+
 	t.Run("get empty named tag lists", func(t *testing.T) {
 		got, _ := NewNamedTagListRepository(pool).FindAll([]string{"bucket"})
 		want := []NamedTagList{}
@@ -187,6 +189,34 @@ func TestNamedTagListRepository(t *testing.T) {
 
 		if err := NewNamedTagListRepository(pool).DeleteAll(); err != nil {
 			t.Fatal(err)
+		}
+	})
+
+	t.Run("get named tag lists does not include results from other buckets", func(t *testing.T) {
+		if err := NewNamedTagListRepository(pool).Create(
+			"red",
+			NamedTagList{Name: "red", ID: deadbeef},
+		); err != nil {
+			t.Fatal(err)
+		}
+
+		if err := NewNamedTagListRepository(pool).Create(
+			"blue",
+			NamedTagList{Name: "blue", ID: "9c5e7bad-b2f7-4d8b-9df9-fc0e51862d8e"},
+		); err != nil {
+			t.Fatal(err)
+		}
+
+		var got []NamedTagList
+		if got, err = NewNamedTagListRepository(pool).FindAll([]string{"red"}); err != nil {
+			t.Fatal(err)
+		}
+		want := []NamedTagList{
+			{Name: "red", ID: deadbeef},
+		}
+
+		if !reflect.DeepEqual(got, want) {
+			t.Errorf("got %+v want %+v", got, want)
 		}
 	})
 }
