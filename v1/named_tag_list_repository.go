@@ -2,6 +2,7 @@ package v1
 
 import (
 	"context"
+	"errors"
 
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
@@ -9,7 +10,8 @@ import (
 
 // NamedTagListRepository ...
 type NamedTagListRepository interface {
-	FindAll() ([]NamedTagList, error)
+	FindAllOld() ([]NamedTagList, error)
+	FindAll(buckets []string) ([]NamedTagList, error)
 	Create(namedTagList NamedTagList) error
 	ReplaceByIds(ids []string, ntl NamedTagList) error
 	DeleteAll() error
@@ -20,7 +22,11 @@ type namedTagListRepository struct {
 	pool *pgxpool.Pool
 }
 
-func (r *namedTagListRepository) FindAll() ([]NamedTagList, error) {
+func (r *namedTagListRepository) FindAll(buckets []string) ([]NamedTagList, error) {
+	return nil, errors.New("not implemented")
+}
+
+func (r *namedTagListRepository) FindAllOld() ([]NamedTagList, error) {
 	var (
 		rows pgx.Rows
 		err  error

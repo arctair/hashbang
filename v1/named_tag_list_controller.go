@@ -33,7 +33,7 @@ func (c *namedTagListController) GetNamedTagLists() http.Handler {
 				namedTagLists []NamedTagList
 				err           error
 			)
-			if namedTagLists, err = c.namedTagListRepository.FindAll(); err != nil {
+			if namedTagLists, err = c.namedTagListRepository.FindAll(buckets); err != nil {
 				rw.WriteHeader(http.StatusInternalServerError)
 				c.logger.Error(err)
 			}

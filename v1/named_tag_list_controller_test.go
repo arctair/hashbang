@@ -37,11 +37,19 @@ type stubNamedTagListRepositoryForController struct {
 	err error
 }
 
-func (r *stubNamedTagListRepositoryForController) FindAll() ([]NamedTagList, error) {
-	if r.willError == "FindAll" {
+func (r *stubNamedTagListRepositoryForController) FindAll(buckets []string) ([]NamedTagList, error) {
+	requestMatched := reflect.DeepEqual(buckets, r.withBuckets)
+	if !requestMatched {
+		r.err = fmt.Errorf("Stub got buckets %v want %v", buckets, r.withBuckets)
+	}
+	if requestMatched == (r.willError == "FindAll") {
 		return nil, errors.New("there was an error")
 	}
 	return []NamedTagList{r.withNamedTagList}, nil
+}
+
+func (r *stubNamedTagListRepositoryForController) FindAllOld() ([]NamedTagList, error) {
+	return nil, errors.New("do not call")
 }
 
 func (r *stubNamedTagListRepositoryForController) ReplaceByIds(ids []string, ntl NamedTagList) error {
@@ -144,17 +152,23 @@ func TestNamedTagListController(t *testing.T) {
 
 	t.Run("GET when repository has error", func(t *testing.T) {
 		logger := stubLoggerNew()
+		repository := &stubNamedTagListRepositoryForController{
+			withBuckets: []string{"bucket"},
+			willError:   "FindAll",
+		}
 		controller := NewNamedTagListController(
 			logger,
-			&stubNamedTagListRepositoryForController{
-				willError: "FindAll",
-			},
+			repository,
 			&stubNamedTagListService{},
 		)
 
 		request, _ := http.NewRequest(http.MethodGet, "/?bucket=bucket", nil)
 		response := httptest.NewRecorder()
 		controller.GetNamedTagLists().ServeHTTP(response, request)
+
+		if repository.err != nil {
+			t.Error(repository.err)
+		}
 
 		gotStatusCode := response.Result().StatusCode
 		wantStatusCode := 500
