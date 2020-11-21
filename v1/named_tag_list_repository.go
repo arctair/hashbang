@@ -9,7 +9,6 @@ import (
 
 // NamedTagListRepository ...
 type NamedTagListRepository interface {
-	FindAllOld() ([]NamedTagList, error)
 	FindAll(buckets []string) ([]NamedTagList, error)
 	Create(bucket string, namedTagList NamedTagList) error
 	ReplaceByIds(ids []string, ntl NamedTagList) error
@@ -19,29 +18,6 @@ type NamedTagListRepository interface {
 
 type namedTagListRepository struct {
 	pool *pgxpool.Pool
-}
-
-func (r *namedTagListRepository) FindAllOld() ([]NamedTagList, error) {
-	var (
-		rows pgx.Rows
-		err  error
-	)
-
-	if rows, err = r.pool.Query(context.Background(), "select \"id\", \"name\", \"tags\" from named_tag_lists"); err != nil {
-		return nil, err
-	}
-
-	namedTagLists := []NamedTagList{}
-
-	var namedTagList NamedTagList
-	for rows.Next() {
-		if err = rows.Scan(&namedTagList.ID, &namedTagList.Name, &namedTagList.Tags); err != nil {
-			return nil, err
-		}
-		namedTagLists = append(namedTagLists, namedTagList)
-	}
-
-	return namedTagLists, nil
 }
 
 func (r *namedTagListRepository) FindAll(buckets []string) ([]NamedTagList, error) {

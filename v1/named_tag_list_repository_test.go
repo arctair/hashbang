@@ -20,7 +20,7 @@ func TestNamedTagListRepository(t *testing.T) {
 	assertutil.NotError(t, Migrate(pool))
 
 	t.Run("get empty named tag lists", func(t *testing.T) {
-		got, _ := NewNamedTagListRepository(pool).FindAllOld()
+		got, _ := NewNamedTagListRepository(pool).FindAll([]string{"bucket"})
 		want := []NamedTagList{}
 
 		if !reflect.DeepEqual(got, want) {
@@ -58,7 +58,7 @@ func TestNamedTagListRepository(t *testing.T) {
 		}
 
 		var got []NamedTagList
-		if got, err = NewNamedTagListRepository(pool).FindAllOld(); err != nil {
+		if got, err = NewNamedTagListRepository(pool).FindAll([]string{"bucket"}); err != nil {
 			t.Fatal(err)
 		}
 		want := []NamedTagList{
@@ -90,7 +90,7 @@ func TestNamedTagListRepository(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		got, _ := NewNamedTagListRepository(pool).FindAllOld()
+		got, _ := NewNamedTagListRepository(pool).FindAll([]string{"bucket"})
 		want := []NamedTagList{
 			{
 				ID:   "a5a5acbf-1541-4fd8-bf9a-343b75b8550f",
@@ -112,7 +112,7 @@ func TestNamedTagListRepository(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		got, _ := NewNamedTagListRepository(pool).FindAllOld()
+		got, _ := NewNamedTagListRepository(pool).FindAll([]string{"bucket"})
 		want := []NamedTagList{}
 
 		if !reflect.DeepEqual(got, want) {
@@ -162,7 +162,7 @@ func TestNamedTagListRepository(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		got, _ := NewNamedTagListRepository(pool).FindAllOld()
+		got, _ := NewNamedTagListRepository(pool).FindAll([]string{"bucket"})
 		want := []NamedTagList{
 			{
 				ID:   "beefdead-d868-48a9-94d4-6e7f7db450ea",
