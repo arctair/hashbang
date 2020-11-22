@@ -67,8 +67,12 @@ func (r *stubNamedTagListRepositoryForController) DeleteByIds(ids []string) erro
 	return nil
 }
 
-func (r *stubNamedTagListRepositoryForController) DeleteAll() error {
-	if r.willError == "DeleteAll" {
+func (r *stubNamedTagListRepositoryForController) DeleteAll(buckets []string) error {
+	requestMatched := reflect.DeepEqual(buckets, r.withBuckets)
+	if !requestMatched {
+		r.err = fmt.Errorf("Stub got buckets %v want %v", buckets, r.withBuckets)
+	}
+	if requestMatched == (r.willError == "DeleteAll") {
 		return errors.New("there was an error")
 	}
 	return nil
@@ -520,6 +524,65 @@ func TestNamedTagListController(t *testing.T) {
 	})
 
 	t.Run("DELETE all", func(t *testing.T) {
+		repository := &stubNamedTagListRepositoryForController{
+			withBuckets: []string{"bucket"},
+		}
+		controller := NewNamedTagListController(
+			stubLoggerNew(),
+			repository,
+			&stubNamedTagListService{},
+		)
+
+		request, _ := http.NewRequest(http.MethodDelete, "/namedTagLists?bucket=bucket", nil)
+		response := httptest.NewRecorder()
+		controller.DeleteNamedTagLists().ServeHTTP(response, request)
+
+		if repository.err != nil {
+			t.Error(repository.err)
+		}
+
+		gotStatusCode := response.Result().StatusCode
+		wantStatusCode := 204
+
+		if gotStatusCode != wantStatusCode {
+			t.Errorf("got status code %d want %d", gotStatusCode, wantStatusCode)
+		}
+	})
+
+	t.Run("DELETE all when repository has error", func(t *testing.T) {
+		logger := stubLoggerNew()
+		repository := &stubNamedTagListRepositoryForController{
+			withBuckets: []string{"bucket"},
+			willError:   "DeleteAll",
+		}
+		controller := NewNamedTagListController(
+			logger,
+			repository,
+			&stubNamedTagListService{},
+		)
+
+		request, _ := http.NewRequest(http.MethodDelete, "/namedTagLists?bucket=bucket", nil)
+		response := httptest.NewRecorder()
+		controller.DeleteNamedTagLists().ServeHTTP(response, request)
+
+		if repository.err != nil {
+			t.Error(repository.err)
+		}
+
+		gotStatusCode := response.Result().StatusCode
+		wantStatusCode := 500
+
+		if gotStatusCode != wantStatusCode {
+			t.Errorf("got status code %d want %d", gotStatusCode, wantStatusCode)
+		}
+
+		wantErrorf := []string{"there was an error"}
+		if !reflect.DeepEqual(logger.errors, wantErrorf) {
+			t.Errorf("got logger.Errorf %+v want %+v", logger.errors, wantErrorf)
+		}
+	})
+
+	t.Run("DELETE when bucket and id is empty", func(t *testing.T) {
 		repository := &stubNamedTagListRepositoryForController{}
 		controller := NewNamedTagListController(
 			stubLoggerNew(),
@@ -532,37 +595,21 @@ func TestNamedTagListController(t *testing.T) {
 		controller.DeleteNamedTagLists().ServeHTTP(response, request)
 
 		gotStatusCode := response.Result().StatusCode
-		wantStatusCode := 204
-
-		if gotStatusCode != wantStatusCode {
-			t.Errorf("got status code %d want %d", gotStatusCode, wantStatusCode)
-		}
-	})
-
-	t.Run("DELETE all when repository has error", func(t *testing.T) {
-		logger := stubLoggerNew()
-		controller := NewNamedTagListController(
-			logger,
-			&stubNamedTagListRepositoryForController{
-				willError: "DeleteAll",
-			},
-			&stubNamedTagListService{},
-		)
-
-		request, _ := http.NewRequest(http.MethodDelete, "/namedTagLists", nil)
-		response := httptest.NewRecorder()
-		controller.DeleteNamedTagLists().ServeHTTP(response, request)
-
-		gotStatusCode := response.Result().StatusCode
-		wantStatusCode := 500
+		wantStatusCode := 400
 
 		if gotStatusCode != wantStatusCode {
 			t.Errorf("got status code %d want %d", gotStatusCode, wantStatusCode)
 		}
 
-		wantErrorf := []string{"there was an error"}
-		if !reflect.DeepEqual(logger.errors, wantErrorf) {
-			t.Errorf("got logger.Errorf %+v want %+v", logger.errors, wantErrorf)
+		var gotResponseBody map[string]string
+		if err := json.NewDecoder(response.Body).Decode(&gotResponseBody); err != nil {
+			t.Fatal(err)
+		}
+
+		wantResponseBody := map[string]string{"error": "bucket or id query parameter is required"}
+
+		if !reflect.DeepEqual(gotResponseBody, wantResponseBody) {
+			t.Errorf("got response body %+v want %+v", gotResponseBody, wantResponseBody)
 		}
 	})
 }

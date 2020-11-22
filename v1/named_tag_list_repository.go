@@ -12,7 +12,7 @@ type NamedTagListRepository interface {
 	FindAll(buckets []string) ([]NamedTagList, error)
 	Create(bucket string, namedTagList NamedTagList) error
 	ReplaceByIds(ids []string, ntl NamedTagList) error
-	DeleteAll() error
+	DeleteAll(buckets []string) error
 	DeleteByIds(ids []string) error
 }
 
@@ -66,8 +66,12 @@ func (r *namedTagListRepository) ReplaceByIds(ids []string, ntl NamedTagList) er
 	return err
 }
 
-func (r *namedTagListRepository) DeleteAll() error {
-	_, err := r.pool.Exec(context.Background(), "delete from named_tag_lists")
+func (r *namedTagListRepository) DeleteAll(buckets []string) error {
+	_, err := r.pool.Exec(
+		context.Background(),
+		"delete from named_tag_lists where \"bucket\" = ANY($1)",
+		buckets,
+	)
 	return err
 }
 

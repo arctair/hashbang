@@ -130,7 +130,7 @@ func deleteNamedTagList(baseUrl string, id string) error {
 	return nil
 }
 
-func deleteNamedTagLists(baseUrl string) error {
+func deleteNamedTagLists(baseUrl string, buckets []string) error {
 	var (
 		err      error
 		request  *http.Request
@@ -139,7 +139,7 @@ func deleteNamedTagLists(baseUrl string) error {
 
 	if request, err = http.NewRequest(
 		http.MethodDelete,
-		fmt.Sprintf("%s/namedTagLists", baseUrl),
+		fmt.Sprintf("%s/namedTagLists?%s", baseUrl, queryString(buckets)),
 		nil,
 	); err != nil {
 		return err
@@ -149,11 +149,8 @@ func deleteNamedTagLists(baseUrl string) error {
 		return err
 	}
 
-	gotStatusCode := response.StatusCode
-	wantStatusCode := 204
-
-	if gotStatusCode != wantStatusCode {
-		return fmt.Errorf("got status code %d want %d", gotStatusCode, wantStatusCode)
+	if err := assertStatusCode(response, 204); err != nil {
+		return err
 	}
 	return nil
 }

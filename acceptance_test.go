@@ -146,7 +146,7 @@ func TestAcceptance(t *testing.T) {
 		})
 
 		t.Run("delete all named tag lists", func(t *testing.T) {
-			err := deleteNamedTagLists(baseUrl)
+			err := deleteNamedTagLists(baseUrl, buckets)
 			assertutil.NotError(t, err)
 
 			gotNamedTagLists, err := getNamedTagLists(baseUrl, buckets)
@@ -204,12 +204,30 @@ func TestAcceptance(t *testing.T) {
 				t.Errorf("got named tag lists %+v want %+v", gotNamedTagLists, wantNamedTagLists)
 			}
 
-			err = deleteNamedTagLists(baseUrl)
+			err = deleteNamedTagLists(baseUrl, buckets)
 			assertutil.NotError(t, err)
 		})
 	})
 
 	t.Run("named tag list buckets", func(t *testing.T) {
+		var err error
+		if _, err := createNamedTagList(
+			baseUrl,
+			[]string{"red"},
+			NamedTagList{Name: "red"},
+		); err != nil {
+			t.Fatal(err)
+		}
+
+		var blueNamedTagList *NamedTagList
+		if blueNamedTagList, err = createNamedTagList(
+			baseUrl,
+			[]string{"blue"},
+			NamedTagList{Name: "blue"},
+		); err != nil {
+			t.Fatal(err)
+		}
+
 		for _, scenario := range []struct {
 			buckets          []string
 			wantResponseBody string
@@ -254,26 +272,7 @@ func TestAcceptance(t *testing.T) {
 			}
 		})
 		t.Run("get named tag lists does not include results from other buckets", func(t *testing.T) {
-			var err error
-			if _, err := createNamedTagList(
-				baseUrl,
-				[]string{"red"},
-				NamedTagList{Name: "red"},
-			); err != nil {
-				t.Fatal(err)
-			}
-
-			var blueNamedTagList *NamedTagList
-			if blueNamedTagList, err = createNamedTagList(
-				baseUrl,
-				[]string{"blue"},
-				NamedTagList{Name: "blue"},
-			); err != nil {
-				t.Fatal(err)
-			}
-
 			var gotNamedTagLists []NamedTagList
-
 			if gotNamedTagLists, err = getNamedTagLists(baseUrl, []string{"blue"}); err != nil {
 				t.Fatal(err)
 			}
@@ -285,7 +284,48 @@ func TestAcceptance(t *testing.T) {
 				t.Errorf("got named tag lists %+v want %+v", gotNamedTagLists, wantNamedTagLists)
 			}
 		})
-		if err := deleteNamedTagLists(baseUrl); err != nil {
+		t.Run("delete without bucket or id returns bad request", func(t *testing.T) {
+			var err error
+			if err = deleteNamedTagLists(baseUrl, []string{}); err == nil {
+				t.Fatalf("got no error want error")
+			}
+
+			gotErr := fmt.Sprint(err)
+			wantErr := "got status-code=400 want status-code=204 (response-body=map[error:bucket or id query parameter is required])"
+			if err != nil && !reflect.DeepEqual(gotErr, wantErr) {
+				t.Errorf("got error \"%s\" want \"%s\"", gotErr, wantErr)
+			}
+		})
+		t.Run("delete all in bucket does not delete results from other buckets", func(t *testing.T) {
+			if err := deleteNamedTagLists(baseUrl, []string{"red"}); err != nil {
+				t.Fatal(err)
+			}
+
+			var (
+				err              error
+				gotNamedTagLists []NamedTagList
+			)
+			if gotNamedTagLists, err = getNamedTagLists(baseUrl, []string{"blue"}); err != nil {
+				t.Fatal(err)
+			}
+			wantNamedTagLists := []NamedTagList{
+				{Id: blueNamedTagList.Id, Name: "blue"},
+			}
+
+			if !reflect.DeepEqual(gotNamedTagLists, wantNamedTagLists) {
+				t.Errorf("got named tag lists %+v want %+v", gotNamedTagLists, wantNamedTagLists)
+			}
+
+			if gotNamedTagLists, err = getNamedTagLists(baseUrl, []string{"red"}); err != nil {
+				t.Fatal(err)
+			}
+			wantNamedTagLists = []NamedTagList{}
+
+			if !reflect.DeepEqual(gotNamedTagLists, wantNamedTagLists) {
+				t.Errorf("got named tag lists %+v want %+v", gotNamedTagLists, wantNamedTagLists)
+			}
+		})
+		if err := deleteNamedTagLists(baseUrl, []string{"red"}); err != nil {
 			t.Fatal(err)
 		}
 	})

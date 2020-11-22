@@ -24,8 +24,7 @@ func (c *namedTagListController) GetNamedTagLists() http.Handler {
 		func(rw http.ResponseWriter, r *http.Request) {
 			buckets := r.URL.Query()["bucket"]
 			if len(buckets) < 1 {
-				rw.WriteHeader(http.StatusBadRequest)
-				json.NewEncoder(rw).Encode(map[string]string{"error": "bucket query parameter is required"})
+				writeBadRequest(rw, "bucket query parameter is required")
 				return
 			}
 
@@ -51,12 +50,10 @@ func (c *namedTagListController) CreateNamedTagList() http.Handler {
 		func(rw http.ResponseWriter, r *http.Request) {
 			buckets := r.URL.Query()["bucket"]
 			if len(buckets) < 1 {
-				rw.WriteHeader(http.StatusBadRequest)
-				json.NewEncoder(rw).Encode(map[string]string{"error": "bucket query parameter is required"})
+				writeBadRequest(rw, "bucket query parameter is required")
 				return
 			} else if len(buckets) > 1 {
-				rw.WriteHeader(http.StatusBadRequest)
-				json.NewEncoder(rw).Encode(map[string]string{"error": "no more than one bucket must be supplied"})
+				writeBadRequest(rw, "no more than one bucket must be supplied")
 				return
 			}
 
@@ -98,12 +95,18 @@ func (c *namedTagListController) ReplaceNamedTagLists() http.Handler {
 func (c *namedTagListController) DeleteNamedTagLists() http.Handler {
 	return http.HandlerFunc(
 		func(rw http.ResponseWriter, r *http.Request) {
-			var err error
 			ids := r.URL.Query()["id"]
+			buckets := r.URL.Query()["bucket"]
+			if len(ids) < 1 && len(buckets) < 1 {
+				writeBadRequest(rw, "bucket or id query parameter is required")
+				return
+			}
+
+			var err error
 			if len(ids) > 0 {
 				err = c.namedTagListRepository.DeleteByIds(ids)
 			} else {
-				err = c.namedTagListRepository.DeleteAll()
+				err = c.namedTagListRepository.DeleteAll(buckets)
 			}
 			if err != nil {
 				rw.WriteHeader(500)
@@ -126,4 +129,9 @@ func NewNamedTagListController(
 		namedTagListRepository,
 		namedTagListService,
 	}
+}
+
+func writeBadRequest(rw http.ResponseWriter, message string) {
+	rw.WriteHeader(http.StatusBadRequest)
+	json.NewEncoder(rw).Encode(map[string]string{"error": message})
 }
