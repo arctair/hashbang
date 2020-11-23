@@ -325,7 +325,7 @@ func TestAcceptance(t *testing.T) {
 				t.Errorf("got named tag lists %+v want %+v", gotNamedTagLists, wantNamedTagLists)
 			}
 		})
-		if err := deleteNamedTagLists(baseUrl, []string{"red"}); err != nil {
+		if err := deleteNamedTagLists(baseUrl, []string{"blue"}); err != nil {
 			t.Fatal(err)
 		}
 	})
