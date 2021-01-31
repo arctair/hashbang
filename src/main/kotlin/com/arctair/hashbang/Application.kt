@@ -1,7 +1,7 @@
-package com.arctair.ktor_starter
+package com.arctair.hashbang
 
-import com.arctair.ktor_starter.version.VersionService
-import com.arctair.ktor_starter.version.versionController
+import com.arctair.hashbang.version.VersionService
+import com.arctair.hashbang.version.versionController
 import io.ktor.application.*
 import io.ktor.features.*
 import io.ktor.jackson.*

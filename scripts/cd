@@ -1,8 +1,8 @@
 #!/bin/sh
 ./gradlew \
   clean shadowJar docker dockerPush darkDeploy test switchDeployments \
-  -DstepperHost=painkiller.arctair.com \
+  -DstepperHost=hashbang.arctair.comm \
   -DstepperBasePath=stepper \
-  -DtargetHost=painkiller.arctair.com \
-  -DtargetBasePath=ktor-starter-dark \
-  -Dktor_starter_baseUrl=http://painkiller.arctair.com/ktor-starter-dark
+  -DtargetHost=hashbang.arctair.com \
+  -DtargetBasePath=api-dark \
+  -Dhashbang_baseUrl=http://hashbang.arctair.com/api-dark

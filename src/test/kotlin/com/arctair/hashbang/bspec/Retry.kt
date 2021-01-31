@@ -1,4 +1,4 @@
-package com.arctair.ktor_starter.bspec
+package com.arctair.hashbang.bspec
 
 import kotlinx.coroutines.delay
 

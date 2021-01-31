@@ -1,4 +1,4 @@
 FROM openjdk:11-jre
-COPY ktor-starter-*.jar /app/ktor-starter.jar
+COPY hashbang-*.jar /app/hashbang.jar
 EXPOSE 8080
-CMD ["java", "-jar", "/app/ktor-starter.jar"]
+CMD ["java", "-jar", "/app/hashbang.jar"]

@@ -1,4 +1,4 @@
-package com.arctair.ktor_starter.version
+package com.arctair.hashbang.version
 
 import io.ktor.application.*
 import io.ktor.response.*

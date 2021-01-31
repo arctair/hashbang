@@ -1,4 +1,4 @@
-package com.arctair.ktor_starter.version
+package com.arctair.hashbang.version
 
 import java.util.*
 

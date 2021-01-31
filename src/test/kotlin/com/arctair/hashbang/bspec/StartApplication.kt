@@ -1,6 +1,6 @@
-package com.arctair.ktor_starter.bspec
+package com.arctair.hashbang.bspec
 
-import com.arctair.ktor_starter.applicationModule
+import com.arctair.hashbang.applicationModule
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import org.junit.jupiter.api.extension.BeforeAllCallback
@@ -10,7 +10,7 @@ internal object StartApplication : BeforeAllCallback, ExtensionContext.Store.Clo
   var server: NettyApplicationEngine? = null
 
   override fun beforeAll(context: ExtensionContext?) {
-    if (System.getProperty("ktor_starter_baseUrl") != null || server != null) return
+    if (System.getProperty("hashbang_baseUrl") != null || server != null) return
     server = embeddedServer(
       Netty,
       applicationEngineEnvironment {

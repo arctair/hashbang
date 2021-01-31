@@ -1,12 +1,12 @@
-# ktor-starter
+# hashbang
 This starter gifts you a runnable barebones Kotlin Ktor application with tests.
 ## Eject
 `./eject`
-Ejecting renames packages, artifacts, services, deployments, and the project name from ktor-starter to the name of this directory.
+Ejecting renames packages, artifacts, services, deployments, and the project name from hashbang to the name of this directory.
 ## Run the tests
 `./gradlew cleanTest test`
 ### Against a deployment
-`./gradlew cleanTest test -Dktor_starter_baseUrl=http://painkiller.arctair.com/ktor-starter`
+`./gradlew cleanTest test -Dhasbang_baseUrl=http://hashbang.arctair.com/api`
 ## Build, deploy, verify
 `scripts/cd`
 The cd script executes these steps:

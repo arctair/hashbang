@@ -59,7 +59,7 @@ dependencies {
 
 tasks.test {
   useJUnitPlatform()
-  if (System.getenv("ktor_starter_baseUrl") != null) {
+  if (System.getenv("hashbang_baseUrl") != null) {
     include("**/bspec/")
   }
 }

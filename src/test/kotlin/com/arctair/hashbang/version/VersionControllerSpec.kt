@@ -1,6 +1,6 @@
-package com.arctair.ktor_starter.version
+package com.arctair.hashbang.version
 
-import com.arctair.ktor_starter.globalModules
+import com.arctair.hashbang.globalModules
 import io.ktor.http.*
 import io.ktor.server.testing.*
 import io.mockk.every

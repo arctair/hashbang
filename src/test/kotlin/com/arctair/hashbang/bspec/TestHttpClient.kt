@@ -1,4 +1,4 @@
-package com.arctair.ktor_starter.bspec
+package com.arctair.hashbang.bspec
 
 import io.ktor.client.*
 import io.ktor.client.features.*
@@ -17,7 +17,7 @@ internal object TestHttpClientProvider : BeforeEachCallback, ExtensionContext.St
     "" to HttpClient {
       install(JsonFeature)
       defaultRequest {
-        setBaseUrl(this, "ktor_starter_baseUrl", "http://localhost:8080")
+        setBaseUrl(this, "hashbang_baseUrl", "http://localhost:8080")
       }
     },
   )

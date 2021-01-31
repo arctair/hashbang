@@ -1,4 +1,4 @@
-package com.arctair.ktor_starter.bspec
+package com.arctair.hashbang.bspec
 
 import io.ktor.client.*
 import io.ktor.client.request.*
