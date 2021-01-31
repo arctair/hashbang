@@ -9,7 +9,7 @@ plugins {
   id("com.painkillergis.stepper_client.stepperClient") version "1.0.18"
 }
 
-group = "com.painkillergis"
+group = "com.arctair"
 
 version =
   ProcessBuilder("sh", "-c", "git rev-list --count HEAD")
@@ -100,6 +100,6 @@ configurations.all {
 }
 
 docker {
-  name = "painkillergis/${rootProject.name}:$version"
+  name = "arctair/${rootProject.name}:$version"
   files("build/libs/${rootProject.name}-$version.jar")
 }

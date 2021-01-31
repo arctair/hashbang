@@ -1,4 +1,4 @@
-package com.painkillergis.ktor_starter.bspec
+package com.arctair.ktor_starter.bspec
 
 import kotlinx.coroutines.delay
 

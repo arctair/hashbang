@@ -1,4 +1,4 @@
-package com.painkillergis.ktor_starter.bspec
+package com.arctair.ktor_starter.bspec
 
 import io.ktor.client.*
 import io.ktor.client.features.*
