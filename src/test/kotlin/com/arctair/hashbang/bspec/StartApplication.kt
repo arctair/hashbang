@@ -10,7 +10,7 @@ internal object StartApplication : BeforeAllCallback, ExtensionContext.Store.Clo
   var server: NettyApplicationEngine? = null
 
   override fun beforeAll(context: ExtensionContext?) {
-    if (System.getProperty("hashbang_baseUrl") != null || server != null) return
+    if (System.getProperty("targetBaseUri") != null || server != null) return
     server = embeddedServer(
       Netty,
       applicationEngineEnvironment {

@@ -6,7 +6,7 @@ plugins {
   kotlin("plugin.serialization") version "1.4.21"
   id("com.github.johnrengelman.shadow") version "4.0.4"
   id("com.palantir.docker") version "0.25.0"
-  id("com.painkillergis.stepper_client.stepperClient") version "1.0.18"
+  id("com.painkillergis.stepper_client.stepperClient") version "1.0.19"
 }
 
 group = "com.arctair"

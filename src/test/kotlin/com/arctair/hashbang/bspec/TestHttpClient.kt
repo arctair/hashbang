@@ -17,17 +17,17 @@ internal object TestHttpClientProvider : BeforeEachCallback, ExtensionContext.St
     "" to HttpClient {
       install(JsonFeature)
       defaultRequest {
-        setBaseUrl(this, "hashbang_baseUrl", "http://localhost:8080")
+        setBaseUrl(this, "targetBaseUri", "http://localhost:8080")
       }
     },
   )
 
   private fun setBaseUrl(builder: HttpRequestBuilder, name: String, default: String) {
-    val baseUrl = System.getProperty(name) ?: default
+    val baseUri = System.getProperty(name) ?: default
     val (protocolString, hostname, basePath) = Regex("(?<protocol>\\w+)://(?<hostname>[\\w.-]+(:\\d+)?)(?<basePath>.*)")
-      .matchEntire(baseUrl)
+      .matchEntire(baseUri)
       ?.groupValues
-      ?.slice(listOf(1, 2, 4)) ?: throw Error("URL environment property $name='$baseUrl' is malformed")
+      ?.slice(listOf(1, 2, 4)) ?: throw Error("URL environment property $name='$baseUri' is malformed")
     builder.url.protocol = URLProtocol.createOrDefault(protocolString)
     builder.url.host = hostname
     builder.url.encodedPath =

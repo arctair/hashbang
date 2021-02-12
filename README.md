@@ -6,7 +6,7 @@ Ejecting renames packages, artifacts, services, deployments, and the project nam
 ## Run the tests
 `./gradlew cleanTest test`
 ### Against a deployment
-`./gradlew cleanTest test -Dhasbang_baseUrl=http://hashbang.arctair.com/api`
+`./gradlew cleanTest test -DtargetBaseUri=https://hashbang.arctair.com/api`
 ## Build, deploy, verify
 `scripts/cd`
 The cd script executes these steps:
