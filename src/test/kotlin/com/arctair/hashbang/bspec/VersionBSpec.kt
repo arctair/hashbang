@@ -1,5 +1,9 @@
 package com.arctair.hashbang.bspec
 
+import com.arctair.hashbang.bspec.util.StartApplication
+import com.arctair.hashbang.bspec.util.TestHttpClient
+import com.arctair.hashbang.bspec.util.TestHttpClientProvider
+import com.arctair.hashbang.bspec.util.Version
 import io.ktor.client.*
 import io.ktor.client.request.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi

@@ -1,4 +1,4 @@
-package com.arctair.hashbang.bspec
+package com.arctair.hashbang.bspec.util
 
 import com.arctair.hashbang.applicationModule
 import io.ktor.server.engine.*

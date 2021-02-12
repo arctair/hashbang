@@ -1,4 +1,4 @@
-package com.arctair.hashbang.bspec
+package com.arctair.hashbang.bspec.util
 
 import kotlinx.coroutines.delay
 
