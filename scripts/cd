@@ -2,4 +2,4 @@
 ./gradlew \
   clean shadowJar docker dockerPush darkDeploy test switchDeployments \
   -DstepperBaseUri=https://hashbang.arctair.com/stepper \
-  -DtargetBaseUri=https://hashbang.arctair.com/api-dark
+  -DtargetBaseUri=https://hashbang.arctair.com/hashbang-dark
