@@ -1,7 +1,7 @@
 #!/bin/sh
 ./gradlew \
   clean shadowJar docker dockerPush darkDeploy test switchDeployments \
-  -DstepperHost=hashbang.arctair.comm \
+  -DstepperHost=hashbang.arctair.com \
   -DstepperBasePath=stepper \
   -DtargetHost=hashbang.arctair.com \
   -DtargetBasePath=api-dark \
