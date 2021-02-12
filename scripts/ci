@@ -1,3 +1,7 @@
 #!/bin/sh
 hashbang_baseUrl=http://hashbang.arctair.com/hashbang-dark ./gradlew \
-  clean shadowJar docker dockerPush darkDeploy cleanTest test switchDeployments
+  clean shadowJar docker dockerPush darkDeploy test switchDeployments \
+  -DstepperHost=hashbang.arctair.com \
+  -DstepperBasePath=stepper \
+  -DtargetHost=hashbang.arctair.com \
+  -DtargetBasePath=api
